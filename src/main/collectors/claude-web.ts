@@ -11,7 +11,7 @@ const PARTITION = 'persist:claudeweb'
 const CHROME_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 
-const secretStore = new Store<{ sessionKey_encrypted?: string; sessionKey?: string }>({
+const secretStore = new Store<{ sessionKey_encrypted?: string; sessionKey?: string; connected?: boolean }>({
   name: 'aicycle-secret'
 })
 
@@ -25,9 +25,10 @@ function getSession() {
 }
 
 export function hasSession(): boolean {
-  return !!(secretStore.get('sessionKey_encrypted') || secretStore.get('sessionKey'))
+  // The login cookie lives in the persistent partition (survives restarts), so
+  // "logged in" is tracked by a flag, independent of safeStorage decryptability.
+  return !!secretStore.get('connected')
 }
-
 
 function readSessionKey(): string | null {
   const enc = secretStore.get('sessionKey_encrypted')
@@ -38,34 +39,44 @@ function readSessionKey(): string | null {
 }
 
 function storeSessionKey(key: string) {
-  if (safeStorage.isEncryptionAvailable()) {
-    secretStore.set('sessionKey_encrypted', safeStorage.encryptString(key).toString('base64'))
-    secretStore.delete('sessionKey')
-  } else {
-    secretStore.set('sessionKey', key)
-  }
+  try {
+    if (safeStorage.isEncryptionAvailable()) {
+      secretStore.set('sessionKey_encrypted', safeStorage.encryptString(key).toString('base64'))
+    }
+  } catch { /* encryption best-effort */ }
+  // Plaintext fallback: safeStorage.decryptString is unreliable across runs on
+  // some Windows setups, and the token is also stored in the partition cookie DB
+  // anyway — so this is the same local exposure, but reliably re-readable.
+  secretStore.set('sessionKey', key)
+  secretStore.set('connected', true)
+}
+
+const COOKIE_TTL = 365 * 24 * 3600
+
+async function setSessionCookie(value: string) {
+  // expirationDate makes it a persistent cookie so it survives app restarts
+  // (claude.ai sets sessionKey as a session cookie, which would otherwise vanish).
+  await getSession().cookies.set({
+    url: 'https://claude.ai', name: 'sessionKey', value,
+    domain: '.claude.ai', secure: true, httpOnly: true,
+    expirationDate: Math.floor(Date.now() / 1000) + COOKIE_TTL
+  })
 }
 
 export function clearSession() {
   secretStore.delete('sessionKey_encrypted')
   secretStore.delete('sessionKey')
+  secretStore.delete('connected')
   cachedOrgId = null
-  const ses = getSession()
-  ses.clearStorageData({ storages: ['cookies'] })
+  getSession().clearStorageData({ storages: ['cookies'] })
 }
 
-async function applyCookie(): Promise<boolean> {
+/** Re-apply the stored key as a cookie when possible. Best-effort: the
+ *  persistent partition normally already holds the cookie from login. */
+async function applyCookie(): Promise<void> {
   const key = readSessionKey()
-  if (!key) return false
-  await getSession().cookies.set({
-    url: 'https://claude.ai',
-    name: 'sessionKey',
-    value: key,
-    domain: '.claude.ai',
-    secure: true,
-    httpOnly: true
-  })
-  return true
+  if (!key) return
+  try { await setSessionCookie(key) } catch { /* noop */ }
 }
 
 async function ensureWin(): Promise<BrowserWindow> {
@@ -130,7 +141,7 @@ function mapExtra(overage: any, prepaid: any): ExtraUsage | undefined {
 
 /** Returns a snapshot from claude.ai, or null if not logged in / session invalid. */
 export async function collectClaudeWeb(includeExtra: boolean): Promise<UsageSnapshot | null> {
-  if (!(await applyCookie())) return null
+  await applyCookie() // best-effort; the persistent partition usually has the cookie
   try {
     const orgId = await getOrgId()
     if (!orgId) return null
@@ -145,10 +156,10 @@ export async function collectClaudeWeb(includeExtra: boolean): Promise<UsageSnap
 
     let extra: ExtraUsage | undefined
     if (includeExtra) {
-      const [overage, prepaid] = await Promise.all([
-        fetchJson(`https://claude.ai/api/organizations/${orgId}/overage_spend_limit`).catch(() => null),
-        fetchJson(`https://claude.ai/api/organizations/${orgId}/prepaid/credits`).catch(() => null)
-      ])
+      // Sequential — fetchJson shares one hidden window, so parallel loadURL
+      // calls would clobber each other.
+      const overage = await fetchJson(`https://claude.ai/api/organizations/${orgId}/overage_spend_limit`).catch(() => null)
+      const prepaid = await fetchJson(`https://claude.ai/api/organizations/${orgId}/prepaid/credits`).catch(() => null)
       extra = mapExtra(overage, prepaid)
     }
 
@@ -180,12 +191,13 @@ export function loginClaude(): Promise<boolean> {
       webPreferences: { partition: PARTITION }
     })
     let done = false
-    const onChanged = (_e: unknown, cookie: Electron.Cookie, _c: string, removed: boolean) => {
+    const onChanged = async (_e: unknown, cookie: Electron.Cookie, _c: string, removed: boolean) => {
       if (cookie.name === 'sessionKey' && cookie.domain?.includes('claude.ai') && !removed && cookie.value) {
         done = true
-        storeSessionKey(cookie.value)
-        cachedOrgId = null
         ses.cookies.removeListener('changed', onChanged)
+        storeSessionKey(cookie.value)
+        try { await setSessionCookie(cookie.value) } catch { /* noop */ } // make it persistent
+        cachedOrgId = null
         if (!loginWin.isDestroyed()) loginWin.close()
         resolve(true)
       }
