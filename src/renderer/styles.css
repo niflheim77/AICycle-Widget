@@ -164,8 +164,8 @@ html, body, #root {
 
 .extra-box { margin-top: 6px; padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
 .extra-title { font-size: var(--fs-window); font-weight: 700; margin-bottom: 5px; }
-.extra-amount { font-size: 18px; font-weight: 800; }
-.extra-limit { font-size: 12px; color: var(--muted); font-weight: 600; }
+.extra-amount { font-size: 11px; font-weight: 800; }
+.extra-limit { font-size: 11px; color: var(--muted); font-weight: 600; }
 .extra-balance { font-size: var(--fs-token); color: var(--muted); margin-top: 3px; }
 .extra-none { font-size: var(--fs-window); }
 .detail-note { font-size: 10px; margin-top: 7px; }
