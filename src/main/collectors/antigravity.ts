@@ -1,0 +1,141 @@
+import { execFileSync } from 'child_process'
+import Store from 'electron-store'
+import { UsageSnapshot, UsageWindow, emptySnapshot } from './types'
+import { t } from '../../shared/i18n'
+
+// Antigravity usage via its local Language Server (Codeium/Windsurf based).
+// The server only runs while Antigravity is open. Each launch it picks a random
+// loopback port and a CSRF token (passed as `--csrf_token` on its command line).
+// We discover both from the running process, then call GetUserStatus with the
+// header `x-codeium-csrf-token`. When the IDE is closed we show the last value.
+
+const cacheStore = new Store<{ antigravity?: UsageSnapshot }>({ name: 'aicycle-cache' })
+let server: { port: number; csrf: string } | null = null
+
+function ps(cmd: string): string {
+  try {
+    return execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd], {
+      encoding: 'utf8', windowsHide: true, timeout: 8000
+    })
+  } catch {
+    return ''
+  }
+}
+
+/** Find the running language_server process: its CSRF token + candidate ports. */
+function discover(): { csrf: string; ports: number[] } | null {
+  const out = ps(
+    "Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'language_server*' } | " +
+    "ForEach-Object { $_.ProcessId.ToString() + '|' + $_.CommandLine }"
+  )
+  const line = out.split('\n').find((l) => /--csrf_token/.test(l))
+  if (!line) return null
+  const pid = line.split('|')[0].trim()
+  const csrf = line.match(/--csrf_token\s+([0-9a-fA-F-]{16,})/)?.[1]
+  if (!csrf || !pid) return null
+  // Ports the language server listens on (loopback).
+  const net = ps(`Get-NetTCPConnection -State Listen -OwningProcess ${pid} | Select-Object -ExpandProperty LocalPort`)
+  const ports = [...new Set(net.split('\n').map((s) => parseInt(s.trim(), 10)).filter((n) => n > 0))]
+  return ports.length ? { csrf, ports } : null
+}
+
+async function rpc(port: number, csrf: string, method: string): Promise<any | null> {
+  try {
+    const r = await fetch(
+      `http://127.0.0.1:${port}/exa.language_server_pb.LanguageServerService/${method}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Connect-Protocol-Version': '1', 'x-codeium-csrf-token': csrf },
+        body: '{}'
+      }
+    )
+    if (!r.ok) return null
+    return await r.json()
+  } catch {
+    return null
+  }
+}
+
+function offline(note: string): UsageSnapshot {
+  const cached = cacheStore.get('antigravity') as UsageSnapshot | undefined
+  if (cached) return { ...cached, stale: true, note: t('ag.offline') }
+  return emptySnapshot('antigravity', note)
+}
+
+/** Resolve a working { port, csrf }, trying the cached one first. */
+async function getStatus(): Promise<{ status: any; port: number; csrf: string } | null> {
+  if (server) {
+    const s = await rpc(server.port, server.csrf, 'GetUserStatus')
+    if (s) return { status: s, port: server.port, csrf: server.csrf }
+  }
+  const d = discover()
+  if (!d) return null
+  for (const port of d.ports) {
+    const s = await rpc(port, d.csrf, 'GetUserStatus')
+    if (s) { server = { port, csrf: d.csrf }; return { status: s, port, csrf: d.csrf } }
+  }
+  return null
+}
+
+export async function collectAntigravity(): Promise<UsageSnapshot> {
+  const res = await getStatus().catch(() => null)
+  if (!res) {
+    server = null
+    return offline(t('ag.turnOn'))
+  }
+
+  const us = res.status.userStatus ?? {}
+  const plan = us.planStatus ?? res.status.planStatus ?? {}
+  const info = plan.planInfo ?? {}
+  // Credit reset time lives on the per-model quotaInfo (all share the same value).
+  const resetAt = us.cascadeModelConfigData?.clientModelConfigs?.[0]?.quotaInfo?.resetTime
+  const windows: UsageWindow[] = []
+  // NOTE: availablePromptCredits is the USED amount (verified: 500/50000 → 남음 99%).
+  const addCredit = (label: string, used: unknown, monthly: unknown) => {
+    const u = Number(used), m = Number(monthly)
+    if (!isFinite(u) || !isFinite(m) || m <= 0) return
+    windows.push({ window_type: 'daily', utilization: Math.min(Math.max(u / m, 0), 1), used: u, limit: m, resets_at: resetAt, label })
+  }
+  addCredit(t('w.promptCredits'), plan.availablePromptCredits, info.monthlyPromptCredits)
+  addCredit(t('w.flowCredits'), plan.availableFlowCredits, info.monthlyFlowCredits)
+
+  if (windows.length === 0) return offline(t('ag.noData'))
+
+  // availableX is the USED amount → show "used / total".
+  const usedOf = (used: unknown, monthly: unknown) => {
+    const u = Number(used), m = Number(monthly)
+    return isFinite(u) && isFinite(m) ? `${u.toLocaleString()} / ${m.toLocaleString()}` : '?'
+  }
+  // -1 means unlimited in this API.
+  const n = (v: unknown) => { const x = Number(v); return isFinite(x) ? (x < 0 ? t('ag.unlimited') : x.toLocaleString()) : '?' }
+  const feat: string[] = []
+  if (info.cascadeWebSearchEnabled) feat.push(t('ag.featWebSearch'))
+  if (info.knowledgeBaseEnabled) feat.push(t('ag.featKnowledge'))
+  if (info.allowStickyPremiumModels) feat.push(t('ag.featPremium'))
+  if (info.cascadeCanAutoRunCommands) feat.push(t('ag.featAutoRun'))
+  if (info.canGenerateCommitMessages) feat.push(t('ag.featCommit'))
+  if (info.hasAutocompleteFastMode) feat.push(t('ag.featFastAutocomplete'))
+
+  const snap: UsageSnapshot = {
+    provider: 'antigravity',
+    available: true,
+    windows,
+    plan: info.planName,
+    extraInfo: [
+      us.name ? t('ag.user', `${us.name}${us.email ? ` (${us.email})` : ''}`) : '',
+      t('ag.plan', info.planName ?? '?'),
+      t('ag.promptLeft', usedOf(plan.availablePromptCredits, info.monthlyPromptCredits)),
+      t('ag.flowLeft', usedOf(plan.availableFlowCredits, info.monthlyFlowCredits)),
+      t('ag.flexLimit', n(info.monthlyFlexCreditPurchaseAmount)),
+      t('ag.maxChatTokens', n(info.maxNumChatInputTokens)),
+      t('ag.premiumChat', n(info.maxNumPremiumChatMessages)),
+      t('ag.canBuy', info.canBuyMoreCredits ? t('ag.yes') : t('ag.no')),
+      feat.length ? t('ag.features', feat.join(' · ')) : ''
+    ].filter(Boolean),
+    fetched_at: new Date().toISOString(),
+    stale: false,
+    source: 'api'
+  }
+  cacheStore.set('antigravity', snap)
+  return snap
+}

@@ -1,0 +1,37 @@
+{
+  "name": "aicycle-widget",
+  "version": "0.1.0",
+  "description": "AI usage widget for Claude, Codex and Antigravity",
+  "main": "out/main/index.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "package": "electron-vite build && electron-builder"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.3.5"
+  },
+  "build": {
+    "appId": "com.aicycle.widget",
+    "productName": "AICycle Widget",
+    "directories": { "output": "release" },
+    "files": ["out/**/*"],
+    "extraResources": [{ "from": "resources", "to": "resources" }],
+    "win": { "target": "nsis", "icon": "resources/icon.png" }
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+out/
+release/
+dist/
+*.log
+widget-capture*.png
+widget-capture*.json
+.claude/
+.DS_Store
