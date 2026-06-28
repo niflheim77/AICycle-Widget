@@ -3,6 +3,7 @@ import type { ProviderId, Settings, UsageSnapshot } from './types'
 import { ProviderCard } from './components/ProviderCard'
 import { ProviderToggles } from './components/ProviderToggles'
 import { DetailView } from './components/DetailView'
+import { SettingsView } from './components/SettingsView'
 import { t, setLang } from '../shared/i18n'
 
 const ORDER: ProviderId[] = ['claude', 'codex', 'antigravity']
@@ -11,6 +12,7 @@ export default function App() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [snaps, setSnaps] = useState<Record<string, UsageSnapshot>>({})
   const [detail, setDetail] = useState<ProviderId | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
   const [, force] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -22,10 +24,13 @@ export default function App() {
     })
     window.aicycle.getSnapshots().then(setSnaps)
     const off = window.aicycle.onSnapshots(setSnaps)
+    const offSettings = window.aicycle.onOpenSettings(() => { setDetail(null); setShowSettings(true) })
     // Re-render every 30s so countdowns stay fresh between polls.
     const timer = setInterval(() => force((n) => n + 1), 30_000)
-    return () => { off(); clearInterval(timer) }
+    return () => { off(); offSettings(); clearInterval(timer) }
   }, [])
+
+  const onPatch = async (patch: Partial<Settings>) => setSettings(await window.aicycle.patchSettings(patch))
 
   // Auto-size the window to fit the rendered content (any toggle combination).
   // Measured after every commit so it both grows and shrinks deterministically.
@@ -38,6 +43,15 @@ export default function App() {
 
   const use24h = settings.use24h
   const enabledIds = ORDER.filter((id) => settings.enabledProviders[id])
+
+  if (showSettings) {
+    return (
+      <div className="app" ref={rootRef}>
+        <div className="drag-bar" />
+        <SettingsView settings={settings} onPatch={onPatch} onClose={() => setShowSettings(false)} />
+      </div>
+    )
+  }
 
   if (detail) {
     const snap = snaps[detail]
@@ -63,8 +77,9 @@ export default function App() {
       <div className="drag-bar">
         <span className="title">AICycle</span>
         <div className="drag-actions">
-          <button className="icon-btn" title="새로고침" onClick={() => window.aicycle.refresh()}>⟳</button>
-          <button className="icon-btn" title="종료" onClick={() => window.aicycle.quit()}>✕</button>
+          <button className="icon-btn" title={t('settings.refreshNow')} onClick={() => window.aicycle.refresh()}>⟳</button>
+          <button className="icon-btn" title={t('settings.title')} onClick={() => setShowSettings(true)}>⚙</button>
+          <button className="icon-btn" title={t('settings.quit')} onClick={() => window.aicycle.quit()}>✕</button>
         </div>
       </div>
 

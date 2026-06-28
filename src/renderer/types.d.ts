@@ -56,6 +56,7 @@ declare global {
       claudeLogout: () => Promise<boolean>
       quit: () => void
       onSnapshots: (cb: (data: Record<string, UsageSnapshot>) => void) => () => void
+      onOpenSettings: (cb: () => void) => () => void
     }
   }
 }

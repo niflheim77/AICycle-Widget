@@ -17,6 +17,11 @@ const api = {
     const listener = (_e: unknown, data: any) => cb(data)
     ipcRenderer.on('snapshots', listener)
     return () => ipcRenderer.removeListener('snapshots', listener)
+  },
+  onOpenSettings: (cb: () => void) => {
+    const listener = () => cb()
+    ipcRenderer.on('open-settings', listener)
+    return () => ipcRenderer.removeListener('open-settings', listener)
   }
 }
 

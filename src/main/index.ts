@@ -29,22 +29,23 @@ function applyLaunchAtStartup(enabled: boolean) {
 
 function rebuildTrayMenu() {
   if (!tray) return
-  const s = getSettings()
   const menu = Menu.buildFromTemplate([
+    { label: t('tray.settings'), click: () => openSettings() },
     { label: t('tray.refresh'), click: () => void pollOnce() },
-    {
-      label: t('tray.onTop'), type: 'checkbox', checked: s.alwaysOnTop,
-      click: (mi) => { patchSettings({ alwaysOnTop: mi.checked }); win?.setAlwaysOnTop(mi.checked, 'floating') }
-    },
-    {
-      label: t('tray.startup'), type: 'checkbox', checked: s.launchAtStartup,
-      click: (mi) => { patchSettings({ launchAtStartup: mi.checked }); applyLaunchAtStartup(mi.checked) }
-    },
     { type: 'separator' },
-    { label: t('tray.claudeLogout'), click: () => { clearSession(); void pollOnce() } },
     { label: t('tray.quit'), click: () => app.quit() }
   ])
   tray.setContextMenu(menu)
+}
+
+function openSettings() {
+  if (!win || win.isDestroyed()) {
+    createWindow()
+    win!.webContents.once('did-finish-load', () => win!.webContents.send('open-settings'))
+  } else {
+    win.show()
+    win.webContents.send('open-settings')
+  }
 }
 
 function createWindow() {
