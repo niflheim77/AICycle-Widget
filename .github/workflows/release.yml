@@ -11,13 +11,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Build each Windows arch separately so no combined installer is produced.
           - os: windows-latest
-            cmd: npx electron-builder --win --x64 --publish never && npx electron-builder --win --arm64 --publish never
+            cmd: --win --x64 --arm64
           - os: ubuntu-latest
-            cmd: npx electron-builder --linux --x64 --arm64 --publish never
+            cmd: --linux --x64 --arm64
           - os: macos-14
-            cmd: npx electron-builder --mac --arm64 --publish never
+            cmd: --mac --arm64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -28,9 +27,15 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Package
-        run: ${{ matrix.cmd }}
+        run: npx electron-builder ${{ matrix.cmd }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
+      # electron-builder also emits a combined multi-arch installer (no -x64/-arm64
+      # suffix); drop it so only the per-arch installers ship.
+      - name: Drop combined Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Get-ChildItem release -Filter *.exe | Where-Object { $_.Name -notmatch '-(x64|arm64)\.exe$' } | Remove-Item -Force -Verbose
       - uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.os }}
