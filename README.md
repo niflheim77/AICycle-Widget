@@ -4,7 +4,7 @@
 
 **An always-on-top desktop widget that shows your AI coding usage for Claude, Codex, and Antigravity — at a glance.**
 
-<img src="assets/widget.png" alt="AICycle Widget" width="320" />
+<img src="assets/shots/compact.png" alt="AICycle Widget" width="320" />
 
 </div>
 
@@ -28,7 +28,7 @@ Inspired by [OpenTokenMonitor](https://github.com/Hitheshkaranth/OpenTokenMonito
 
 | Compact | Detail | Settings |
 |---|---|---|
-| <img src="assets/widget.png" width="280" /> | <img src="assets/detail.png" width="280" /> | <img src="assets/settings.png" width="280" /> |
+| <img src="assets/shots/compact.png" width="280" /> | <img src="assets/shots/detail.png" width="280" /> | <img src="assets/shots/settings.png" width="280" /> |
 
 Each window shows the **used %** with a bar, the time until refresh, and the exact reset clock. Click a card for plan tier and extra usage; open the gear (⚙) for settings.
 
@@ -38,7 +38,7 @@ All data is read locally / from the official services you're already signed into
 
 | Provider | Source | Notes |
 |---|---|---|
-| **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, stored encrypted in the OS keychain) | Shows 5H / 7D / 7D-Opus % + reset and extra usage (overage / prepaid). Not logged in → just a login button. |
+| **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, persisted as a cookie) | Shows 5H / 7D % + reset and extra usage (overage / prepaid). Not logged in → just a login button. |
 | **Codex** | `chatgpt.com/backend-api/codex/usage` using the token in `~/.codex/auth.json` | Fetched through a hidden Chromium window (passes Cloudflare). Shows 5H / weekly % + reset, plan, credits. Falls back to local token counts from `~/.codex/logs_2.sqlite`. |
 | **Antigravity** | The Antigravity IDE's local Language Server (loopback, no extra auth) | Live only while the IDE is open; shows prompt/flow credit usage + reset and full plan details. When closed, the last fetched value is cached and shown. |
 
