@@ -20,15 +20,17 @@ Inspired by [OpenTokenMonitor](https://github.com/Hitheshkaranth/OpenTokenMonito
 - 🟢 **Usage at a glance** — each window (5H / 7D / credits) shows the **used %** with a matching bar.
 - ⏱️ **Time-to-refresh first** — how much time is left is shown prominently, with the exact reset clock alongside.
 - 🔍 **Detail view** — click any card for plan tier, extra usage / overage ($), credits, and account details.
-- 🌐 **Auto language** — UI follows your OS language (English / Korean); compact labels stay short (`5H`, `7D`, `reset`, `left`).
+- 🌐 **Auto language** — UI follows your OS language (English / Korean); compact labels stay short (`5H`, `7D`).
 - 🪶 **Compact & always-on-top** — auto-sizes to its content; lives in the corner without taking over your screen.
-- ⚙️ **Tray menu** — refresh, always-on-top, launch-at-startup, Claude logout, quit.
+- ⚙️ **Settings screen** — always-on-top, launch-at-startup, 24-hour time, refresh interval, plus refresh / Claude logout / quit (open via the gear icon or the tray).
 
 ## Screenshots
 
-| Compact | Detail |
-|---|---|
-| <img src="assets/widget.png" width="300" /> | <img src="assets/detail.png" width="300" /> |
+| Compact | Detail | Settings |
+|---|---|---|
+| <img src="assets/widget.png" width="280" /> | <img src="assets/detail.png" width="280" /> | <img src="assets/settings.png" width="280" /> |
+
+Each window shows the **used %** with a bar, the time until refresh, and the exact reset clock. Click a card for plan tier and extra usage; open the gear (⚙) for settings.
 
 ## How it gets your usage
 
