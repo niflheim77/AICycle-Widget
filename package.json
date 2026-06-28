@@ -29,9 +29,27 @@
   "build": {
     "appId": "com.aicycle.widget",
     "productName": "AICycle Widget",
+    "artifactName": "AICycle-Widget-${version}-${arch}.${ext}",
+    "npmRebuild": false,
     "directories": { "output": "release" },
     "files": ["out/**/*"],
     "extraResources": [{ "from": "resources", "to": "resources" }],
-    "win": { "target": "nsis", "icon": "resources/icon.png" }
+    "publish": [{ "provider": "github" }],
+    "win": {
+      "icon": "resources/icon.png",
+      "target": [{ "target": "nsis", "arch": ["x64", "arm64"] }]
+    },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true },
+    "linux": {
+      "icon": "resources/icon.png",
+      "category": "Utility",
+      "maintainer": "niflheim77",
+      "target": [{ "target": "AppImage", "arch": ["x64", "arm64"] }]
+    },
+    "mac": {
+      "icon": "resources/icon.png",
+      "category": "public.app-category.developer-tools",
+      "target": [{ "target": "dmg", "arch": ["arm64"] }]
+    }
   }
 }
