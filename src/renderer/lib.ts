@@ -37,8 +37,8 @@ export function fmtResetWhen(iso?: string, use24h = true): string {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return t('cd.none')
   const time = d.toLocaleTimeString(localeTag(), { hour: '2-digit', minute: '2-digit', hour12: !use24h })
-  const now = new Date()
-  if (d.toDateString() === now.toDateString()) return time
+  // Within 24h → time only; further out → include the date.
+  if (d.getTime() - Date.now() < 24 * 60 * 60 * 1000) return time
   return `${d.getMonth() + 1}/${d.getDate()} ${time}`
 }
 

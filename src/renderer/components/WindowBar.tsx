@@ -29,8 +29,8 @@ export function WindowBar({ w, use24h, isLocal }: { w: UsageWindow; use24h?: boo
       </div>
       {w.resets_at && (
         <div className="wbar-sub">
-          <span>{t('bar.timeLeft', fmtCountdown(w.resets_at))}</span>
-          <span className="muted">{t('bar.refreshAt', fmtResetWhen(w.resets_at, use24h))}</span>
+          <span>{fmtCountdown(w.resets_at)}</span>
+          <span className="muted">{fmtResetWhen(w.resets_at, use24h)}</span>
         </div>
       )}
     </div>
