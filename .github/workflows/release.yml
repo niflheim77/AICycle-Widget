@@ -26,6 +26,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Install rpm tooling (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm
       - name: Package
         run: npx electron-builder ${{ matrix.cmd }} --publish never
         env:
@@ -42,6 +45,8 @@ jobs:
           path: |
             release/*.exe
             release/*.AppImage
+            release/*.deb
+            release/*.rpm
             release/*.dmg
           if-no-files-found: ignore
 
