@@ -22,9 +22,9 @@ function loadIcon() {
   return img.isEmpty() ? nativeImage.createEmpty() : img
 }
 
-/** Register/unregister the app as a Windows login item. */
+/** Register/unregister the app as a login item (Windows/macOS; no-op on most Linux). */
 function applyLaunchAtStartup(enabled: boolean) {
-  app.setLoginItemSettings({ openAtLogin: enabled, args: [] })
+  try { app.setLoginItemSettings({ openAtLogin: enabled, args: [] }) } catch { /* unsupported on this platform */ }
 }
 
 function rebuildTrayMenu() {

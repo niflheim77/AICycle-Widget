@@ -45,7 +45,7 @@ All data is read locally / from the official services you're already signed into
 ## Requirements
 
 - **Node.js 18+** (build/dev). The runtime bundles Electron 35 (Node 22) for built-in `node:sqlite`.
-- Windows (primary target). The collectors use Windows paths/APIs; macOS/Linux would need adjustments.
+- Windows, macOS, and Linux. (Antigravity discovery uses `lsof` on macOS/Linux — present by default on macOS, and on most Linux distros.)
 
 ## Getting started
 

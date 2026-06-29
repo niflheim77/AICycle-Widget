@@ -12,30 +12,48 @@ import { t } from '../../shared/i18n'
 const cacheStore = new Store<{ antigravity?: UsageSnapshot }>({ name: 'aicycle-cache' })
 let server: { port: number; csrf: string } | null = null
 
-function ps(cmd: string): string {
+function run(cmd: string, args: string[]): string {
   try {
-    return execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', cmd], {
-      encoding: 'utf8', windowsHide: true, timeout: 8000
-    })
+    return execFileSync(cmd, args, { encoding: 'utf8', windowsHide: true, timeout: 8000 })
   } catch {
     return ''
   }
 }
 
+const CSRF_RE = /--csrf_token[\s=]+([0-9a-fA-F-]{16,})/
+
 /** Find the running language_server process: its CSRF token + candidate ports. */
 function discover(): { csrf: string; ports: number[] } | null {
-  const out = ps(
+  return process.platform === 'win32' ? discoverWindows() : discoverUnix()
+}
+
+function discoverWindows(): { csrf: string; ports: number[] } | null {
+  const out = run('powershell', ['-NoProfile', '-NonInteractive', '-Command',
     "Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'language_server*' } | " +
     "ForEach-Object { $_.ProcessId.ToString() + '|' + $_.CommandLine }"
-  )
-  const line = out.split('\n').find((l) => /--csrf_token/.test(l))
+  ])
+  const line = out.split('\n').find((l) => CSRF_RE.test(l))
   if (!line) return null
   const pid = line.split('|')[0].trim()
-  const csrf = line.match(/--csrf_token\s+([0-9a-fA-F-]{16,})/)?.[1]
+  const csrf = line.match(CSRF_RE)?.[1]
   if (!csrf || !pid) return null
-  // Ports the language server listens on (loopback).
-  const net = ps(`Get-NetTCPConnection -State Listen -OwningProcess ${pid} | Select-Object -ExpandProperty LocalPort`)
+  const net = run('powershell', ['-NoProfile', '-Command',
+    `Get-NetTCPConnection -State Listen -OwningProcess ${pid} | Select-Object -ExpandProperty LocalPort`])
   const ports = [...new Set(net.split('\n').map((s) => parseInt(s.trim(), 10)).filter((n) => n > 0))]
+  return ports.length ? { csrf, ports } : null
+}
+
+/** macOS / Linux: `ps` for the command line, `lsof` for the listening ports. */
+function discoverUnix(): { csrf: string; ports: number[] } | null {
+  const out = run('ps', ['-ww', '-A', '-o', 'pid=,args='])
+  const line = out.split('\n').find((l) => /language_server/.test(l) && CSRF_RE.test(l))
+  if (!line) return null
+  const m = line.trim().match(/^(\d+)\s+(.*)$/)
+  const pid = m?.[1]
+  const csrf = m?.[2].match(CSRF_RE)?.[1]
+  if (!pid || !csrf) return null
+  const ls = run('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN', '-a', '-p', pid])
+  const ports = [...new Set([...ls.matchAll(/(?:127\.0\.0\.1|\[::1\]|localhost):(\d+)/g)].map((x) => parseInt(x[1], 10)))]
   return ports.length ? { csrf, ports } : null
 }
 
