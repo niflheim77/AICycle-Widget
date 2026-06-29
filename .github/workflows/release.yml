@@ -66,3 +66,22 @@ jobs:
           files: artifacts/**/*
           draft: true
           generate_release_notes: true
+          body: |
+            ## Downloads — pick the file for your OS
+
+            ### 🪟 Windows
+            - `*-x64.exe` — Windows 64-bit (Intel/AMD) — **most PCs**
+            - `*-arm64.exe` — Windows on ARM
+
+            ### 🍎 macOS
+            - `*-arm64.dmg` — Apple Silicon (M1/M2/M3/M4)
+
+            ### 🐧 Linux
+            - `*-x86_64.AppImage` — any distro, no install (`chmod +x`, then run) — **most users**
+            - `*-arm64.AppImage` — any distro, ARM64
+            - `*-amd64.deb` / `*-arm64.deb` — Debian / Ubuntu
+            - `*-x86_64.rpm` / `*-aarch64.rpm` — Fedora / RHEL
+
+            > Unsigned build: on first run, Windows SmartScreen → **More info → Run anyway**; macOS → **right-click → Open**.
+
+            ---
