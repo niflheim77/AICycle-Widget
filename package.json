@@ -1,6 +1,6 @@
 {
   "name": "aicycle-widget",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI usage widget for Claude, Codex and Antigravity",
   "main": "out/main/index.js",
   "author": "",
