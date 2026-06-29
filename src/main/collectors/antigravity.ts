@@ -1,3 +1,4 @@
+import fs from 'fs'
 import { execFileSync } from 'child_process'
 import Store from 'electron-store'
 import { UsageSnapshot, UsageWindow, emptySnapshot } from './types'
@@ -43,18 +44,47 @@ function discoverWindows(): { csrf: string; ports: number[] } | null {
   return ports.length ? { csrf, ports } : null
 }
 
-/** macOS / Linux: `ps` for the command line, `lsof` for the listening ports. */
-function discoverUnix(): { csrf: string; ports: number[] } | null {
+/** Find the language_server PID + CSRF token. Linux: /proc; macOS: ps. */
+function findProcessUnix(): { pid: string; csrf: string } | null {
+  if (process.platform === 'linux') {
+    try {
+      for (const pid of fs.readdirSync('/proc')) {
+        if (!/^\d+$/.test(pid)) continue
+        let cmd: string
+        try { cmd = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').replace(/\0/g, ' ') } catch { continue }
+        if (/language_server/.test(cmd) && CSRF_RE.test(cmd)) {
+          const csrf = cmd.match(CSRF_RE)?.[1]
+          if (csrf) return { pid, csrf }
+        }
+      }
+    } catch { /* /proc unavailable */ }
+    return null
+  }
   const out = run('ps', ['-ww', '-A', '-o', 'pid=,args='])
   const line = out.split('\n').find((l) => /language_server/.test(l) && CSRF_RE.test(l))
-  if (!line) return null
-  const m = line.trim().match(/^(\d+)\s+(.*)$/)
-  const pid = m?.[1]
+  const m = line?.trim().match(/^(\d+)\s+(.*)$/)
   const csrf = m?.[2].match(CSRF_RE)?.[1]
-  if (!pid || !csrf) return null
-  const ls = run('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN', '-a', '-p', pid])
-  const ports = [...new Set([...ls.matchAll(/(?:127\.0\.0\.1|\[::1\]|localhost):(\d+)/g)].map((x) => parseInt(x[1], 10)))]
-  return ports.length ? { csrf, ports } : null
+  return m?.[1] && csrf ? { pid: m[1], csrf } : null
+}
+
+/** Listening loopback ports for a pid. Tries lsof, then `ss` on Linux. */
+function listeningPortsUnix(pid: string): number[] {
+  const grab = (s: string) =>
+    [...new Set([...s.matchAll(/(?:127\.0\.0\.1|\[?::1\]?|localhost):(\d+)/g)].map((x) => parseInt(x[1], 10)).filter((n) => n > 0))]
+  let ports = grab(run('lsof', ['-nP', '-iTCP', '-sTCP:LISTEN', '-a', '-p', pid]))
+  if (!ports.length && process.platform === 'linux') {
+    const ss = run('ss', ['-tlnpH']).split('\n').filter((l) => l.includes(`pid=${pid},`)).join('\n')
+    ports = grab(ss)
+  }
+  return ports
+}
+
+/** macOS / Linux discovery. */
+function discoverUnix(): { csrf: string; ports: number[] } | null {
+  const proc = findProcessUnix()
+  if (!proc) return null
+  const ports = listeningPortsUnix(proc.pid)
+  return ports.length ? { csrf: proc.csrf, ports } : null
 }
 
 async function rpc(port: number, csrf: string, method: string): Promise<any | null> {
