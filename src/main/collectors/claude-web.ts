@@ -107,9 +107,13 @@ async function getOrgId(): Promise<string | null> {
 }
 
 function frac(v: unknown): number {
+  // claude.ai reports utilization as a percentage (0–100), so always divide by
+  // 100. The old `n > 1 ? n/100 : n` heuristic misread a real 1% (API value 1)
+  // as the fraction 1.0 = 100%, which flashed 100% around the reset boundary
+  // when usage passes through the 0–1% range.
   const n = typeof v === 'number' ? v : Number(v)
-  if (!isFinite(n) || n < 0) return 0
-  return n > 1 ? Math.min(n / 100, 1) : n
+  if (!isFinite(n) || n <= 0) return 0
+  return Math.min(n / 100, 1)
 }
 
 function mapWindow(type: UsageWindow['window_type'], src: any, label: string): UsageWindow | null {
