@@ -70,11 +70,15 @@ export async function collectCodexWeb(): Promise<CodexWeb | null> {
       await new Promise((r) => setTimeout(r, 2500))
       primed = true
     }
+    // Omit chatgpt-account-id entirely when unknown: sending it empty makes the
+    // backend answer for the wrong (default) account context — 0% usage with a
+    // full reset window — which flashed bogus values in the widget.
+    const headers: Record<string, string> = { Authorization: `Bearer ${auth.token}`, Accept: 'application/json' }
+    if (auth.account) headers['chatgpt-account-id'] = auth.account
     const script = `
-      fetch('https://chatgpt.com/backend-api/codex/usage', {
-        headers: { 'Authorization': 'Bearer ${auth.token}', 'chatgpt-account-id': '${auth.account ?? ''}', 'Accept': 'application/json' }
-      }).then(r => r.headers.get('content-type')?.includes('json') ? r.text() : Promise.reject('non-json'))
-       .catch(() => null)`
+      fetch('https://chatgpt.com/backend-api/codex/usage', { headers: ${JSON.stringify(headers)} })
+        .then(r => r.headers.get('content-type')?.includes('json') ? r.text() : Promise.reject('non-json'))
+        .catch(() => null)`
     let body: string | null = await w.webContents.executeJavaScript(script)
     if (!body) {
       // Challenge not cleared yet — reload origin and retry once.

@@ -22,9 +22,15 @@ function loadIcon() {
   return img.isEmpty() ? nativeImage.createEmpty() : img
 }
 
-/** Register/unregister the app as a login item (Windows/macOS; no-op on most Linux). */
+/** Register/unregister the app as a login item (Windows/macOS; no-op on most Linux).
+ *  Only writes when the state actually changes: re-asserting on every launch makes
+ *  unsigned/translocated macOS builds log "Unable to set login item: Operation not
+ *  permitted" even when nothing needs doing. */
 function applyLaunchAtStartup(enabled: boolean) {
-  try { app.setLoginItemSettings({ openAtLogin: enabled, args: [] }) } catch { /* unsupported on this platform */ }
+  try {
+    if (app.getLoginItemSettings().openAtLogin === enabled) return
+    app.setLoginItemSettings({ openAtLogin: enabled, args: [] })
+  } catch { /* unsupported on this platform */ }
 }
 
 function rebuildTrayMenu() {

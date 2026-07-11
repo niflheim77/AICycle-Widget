@@ -2,7 +2,7 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import Store from 'electron-store'
-import { UsageSnapshot, emptySnapshot } from './types'
+import { UsageSnapshot, UsageWindow, emptySnapshot } from './types'
 import { collectCodexWeb } from './codex-web'
 import { t } from '../../shared/i18n'
 
@@ -88,12 +88,33 @@ function localInfo(): string[] {
   return [t('codex.localTokens5h', fmtTok(tk.tok5h)), t('codex.localTokens7d', fmtTok(tk.tok7d))]
 }
 
+let zeroBlip = false
+
+/** True when a fresh all-zero reading contradicts a cached window that is still
+ *  running (nonzero usage, reset time in the future). The usage endpoint blips
+ *  to "0% / full window" occasionally; a genuine reset only zeroes a window
+ *  after its scheduled reset time, and the 7d window never drops mid-week. */
+function isSpuriousZero(fresh: UsageWindow[], cached?: UsageSnapshot): boolean {
+  if (!cached || cached.source !== 'api') return false
+  if (!fresh.every((w) => w.utilization === 0)) return false
+  return cached.windows.some(
+    (w) => (w.utilization ?? 0) > 0 && !!w.resets_at && Date.parse(w.resets_at) > Date.now()
+  )
+}
+
 export async function collectCodex(): Promise<UsageSnapshot> {
+  const cached = cacheStore.get('codex') as UsageSnapshot | undefined
   // 1) Official usage % via chatgpt.com (same data as OpenTokenMonitor).
   if (Date.now() - lastWebTry >= WEB_INTERVAL) {
     lastWebTry = Date.now()
     const web = await collectCodexWeb().catch(() => null)
     if (web && web.windows.length) {
+      if (!zeroBlip && isSpuriousZero(web.windows, cached)) {
+        // Hold the cached values for one poll; accept the zeros if they repeat.
+        zeroBlip = true
+        return { ...cached!, extraInfo: [...(cached!.extraInfo ?? []).filter((l) => !l.startsWith('로컬')), ...localInfo()], stale: true }
+      }
+      zeroBlip = false
       const snap: UsageSnapshot = {
         provider: 'codex', available: true, windows: web.windows,
         plan: web.plan, extraInfo: [...web.info, ...localInfo()],
@@ -104,7 +125,6 @@ export async function collectCodex(): Promise<UsageSnapshot> {
     }
   }
   // Serve a recent official snapshot if the live fetch is throttled/blocked.
-  const cached = cacheStore.get('codex') as UsageSnapshot | undefined
   if (cached) return { ...cached, extraInfo: [...(cached.extraInfo ?? []).filter((l) => !l.startsWith('로컬')), ...localInfo()], stale: true }
 
   // 2) Fallback: local token counts only (no official data available).
