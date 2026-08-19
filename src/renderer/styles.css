@@ -204,9 +204,3 @@ html, body, #root {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-/* Cumulative token totals (detail view) */
-.total-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
-.total-sum { font-size: 13px; font-weight: 800; }
-.total-row { display: flex; justify-content: space-between; font-size: var(--fs-window); padding: 1px 0; }
-.total-note { font-size: 10px; margin-top: 5px; line-height: 1.35; }

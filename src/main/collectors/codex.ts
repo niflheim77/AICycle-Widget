@@ -2,9 +2,8 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import Store from 'electron-store'
-import { UsageSnapshot, UsageWindow, TokenTotals, emptySnapshot } from './types'
+import { UsageSnapshot, UsageWindow, emptySnapshot } from './types'
 import { collectCodexWeb } from './codex-web'
-import { codexTotalsFrom } from './tokens'
 import { t } from '../../shared/i18n'
 
 const CODEX_DIR = path.join(os.homedir(), '.codex')
@@ -45,14 +44,11 @@ function fmtTok(n: number): string {
   return String(n)
 }
 
-interface LocalTokens { tok5h: number; tok7d: number; totals?: TokenTotals }
-let tokCache: LocalTokens | null = null
+let tokCache: { tok5h: number; tok7d: number } | null = null
 let tokCacheTs = 0
 
-/** Local token usage from logs_2.sqlite: the 5h/7d windows plus a cumulative
- *  total. Codex rotates this log, so the total only covers what it still holds
- *  (marked partial) — it is not an all-time figure. Cached for a minute. */
-function localTokens(): LocalTokens | null {
+/** Local token usage (5h/7d) from logs_2.sqlite, cached. */
+function localTokens(): { tok5h: number; tok7d: number } | null {
   if (tokCache && Date.now() - tokCacheTs < 60_000) return tokCache
   if (!fs.existsSync(DB)) return null
   const Sqlite = loadSqlite()
@@ -62,27 +58,21 @@ function localTokens(): LocalTokens | null {
   try {
     const nowSec = Math.floor(Date.now() / 1000)
     const cut5h = nowSec - 5 * 60 * 60
-    const cut7d = nowSec - 7 * 24 * 60 * 60
-    // No time filter: the same pass feeds the windows and the cumulative total.
     const rows = db
       .prepare(
         "SELECT ts, feedback_log_body AS body FROM logs " +
-          "WHERE feedback_log_body LIKE '%response.completed%' ORDER BY ts ASC"
+          "WHERE ts > ? AND feedback_log_body LIKE '%response.completed%' ORDER BY ts ASC"
       )
-      .all() as Array<{ ts: number; body: string }>
+      .all(nowSec - 7 * 24 * 60 * 60) as Array<{ ts: number; body: string }>
     let tok5h = 0, tok7d = 0
-    const all: Array<{ ts: number; input: number; output: number }> = []
     for (const r of rows) {
       const u = parseSse(r.body)?.response?.usage
       if (!u) continue
-      const input = u.input_tokens ?? 0
-      const output = u.output_tokens ?? 0
-      const total = u.total_tokens ?? input + output
-      all.push({ ts: r.ts, input, output })
-      if (r.ts >= cut7d) tok7d += total
+      const total = u.total_tokens ?? (u.input_tokens ?? 0) + (u.output_tokens ?? 0)
+      tok7d += total
       if (r.ts >= cut5h) tok5h += total
     }
-    tokCache = { tok5h, tok7d, totals: codexTotalsFrom(all) }
+    tokCache = { tok5h, tok7d }
     tokCacheTs = Date.now()
     return tokCache
   } catch {
@@ -128,7 +118,6 @@ export async function collectCodex(): Promise<UsageSnapshot> {
       const snap: UsageSnapshot = {
         provider: 'codex', available: true, windows: web.windows,
         plan: web.plan, extraInfo: [...web.info, ...localInfo()],
-        totalTokens: localTokens()?.totals,
         fetched_at: new Date().toISOString(), stale: false, source: 'api'
       }
       cacheStore.set('codex', snap)
@@ -136,14 +125,7 @@ export async function collectCodex(): Promise<UsageSnapshot> {
     }
   }
   // Serve a recent official snapshot if the live fetch is throttled/blocked.
-  if (cached) {
-    return {
-      ...cached,
-      extraInfo: [...(cached.extraInfo ?? []).filter((l) => !l.startsWith('로컬')), ...localInfo()],
-      totalTokens: localTokens()?.totals ?? cached.totalTokens,
-      stale: true
-    }
-  }
+  if (cached) return { ...cached, extraInfo: [...(cached.extraInfo ?? []).filter((l) => !l.startsWith('로컬')), ...localInfo()], stale: true }
 
   // 2) Fallback: local token counts only (no official data available).
   const tk = localTokens()
@@ -155,7 +137,6 @@ export async function collectCodex(): Promise<UsageSnapshot> {
       { window_type: 'five_hour', utilization: 0, used: tk.tok5h, label: t('w.5hLocal') },
       { window_type: 'seven_day', utilization: 0, used: tk.tok7d, label: t('w.7dLocal') }
     ],
-    totalTokens: tk.totals,
     fetched_at: new Date().toISOString(),
     stale: false,
     source: 'local',

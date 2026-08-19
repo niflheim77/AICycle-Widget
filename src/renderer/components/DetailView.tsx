@@ -1,37 +1,7 @@
-import type { TokenTotals, UsageSnapshot } from '../types'
-import { PROVIDER_META, fmtTokens } from '../lib'
+import type { UsageSnapshot } from '../types'
+import { PROVIDER_META } from '../lib'
 import { WindowBar } from './WindowBar'
 import { t } from '../../shared/i18n'
-
-/** Cumulative tokens from local logs. Cache reads dominate the sum (they are the
- *  bulk of any long session), so the breakdown is shown rather than one number. */
-function TotalTokens({ tot }: { tot: TokenTotals }) {
-  const day = tot.since ? new Date(tot.since) : null
-  const rows: Array<[string, number]> = [
-    [t('total.input'), tot.input],
-    [t('total.output'), tot.output]
-  ]
-  if (tot.cacheWrite) rows.push([t('total.cacheWrite'), tot.cacheWrite])
-  if (tot.cacheRead) rows.push([t('total.cacheRead'), tot.cacheRead])
-  return (
-    <div className="extra-box">
-      <div className="total-head">
-        <span className="extra-title">{t('total.title')}</span>
-        <span className="total-sum">{fmtTokens(tot.total)}</span>
-      </div>
-      {rows.map(([label, n]) => (
-        <div key={label} className="total-row">
-          <span className="muted">{label}</span>
-          <span>{fmtTokens(n)}</span>
-        </div>
-      ))}
-      <div className="total-note muted">
-        {day ? t('total.since', `${day.getFullYear()}.${day.getMonth() + 1}.${day.getDate()}`) : t('total.thisMachine')}
-        {tot.partial ? ` · ${t('total.partial')}` : ''}
-      </div>
-    </div>
-  )
-}
 
 const CURRENCY: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' }
 
@@ -67,8 +37,6 @@ export function DetailView({
           ))}
         </div>
       )}
-
-      {snap.totalTokens && snap.totalTokens.total > 0 && <TotalTokens tot={snap.totalTokens} />}
 
       {snap.provider === 'claude' && !isLocal && (
         <div className="extra-box">

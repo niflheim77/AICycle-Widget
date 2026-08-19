@@ -20,7 +20,6 @@ Inspired by [OpenTokenMonitor](https://github.com/Hitheshkaranth/OpenTokenMonito
 - 🟢 **Usage at a glance** — each window (5H / 7D / credits) shows the **used %** with a matching bar.
 - ⏱️ **Time-to-refresh first** — how much time is left is shown prominently, with the exact reset clock alongside.
 - 🔍 **Detail view** — click any card for plan tier, extra usage / overage ($), credits, and account details.
-- 🧮 **Cumulative tokens** — lifetime totals read from this machine's local logs, broken down into input / output / cache write / cache read.
 - 🌐 **Auto language** — UI follows your OS language (English / Korean); compact labels stay short (`5H`, `7D`).
 - 🪶 **Compact & always-on-top** — auto-sizes to its content; lives in the corner without taking over your screen.
 - ⚙️ **Settings screen** — always-on-top, launch-at-startup, 24-hour time, refresh interval, plus refresh / Claude logout / quit (open via the gear icon or the tray).
@@ -39,7 +38,7 @@ All data is read locally / from the official services you're already signed into
 
 | Provider | Source | Notes |
 |---|---|---|
-| **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, persisted as a cookie) | Shows 5H / 7D % + reset and extra usage (overage / prepaid). Not logged in → just a login button. Cumulative tokens come from `~/.claude/projects/**/*.jsonl`. |
+| **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, persisted as a cookie) | Shows 5H / 7D % + reset and extra usage (overage / prepaid). Not logged in → just a login button. |
 | **Codex** | `chatgpt.com/backend-api/codex/usage` using the token in `~/.codex/auth.json` | Fetched through a hidden Chromium window (passes Cloudflare). Shows 5H / weekly % + reset, plan, credits. Falls back to local token counts from `~/.codex/logs_2.sqlite`. |
 | **Antigravity** | The Antigravity IDE's local Language Server (loopback, no extra auth) | Live only while the IDE is open; shows prompt/flow credit usage + reset and full plan details. When closed, the last fetched value is cached and shown. |
 
@@ -75,7 +74,6 @@ src/
 - The Claude OAuth usage endpoint (`api.anthropic.com/oauth/usage`) is heavily rate-limited and is **not** used; the widget uses the `claude.ai` web session instead.
 - Reading the session straight out of Chrome's encrypted cookie store is intentionally not implemented.
 - Antigravity has no live data while its IDE is closed (cached value is shown instead).
-- Cumulative token totals are read from local logs, so they only cover this machine. Claude's logs go back months; Codex rotates `logs_2.sqlite`, so its total is labelled as covering only what the log still retains. Repeated entries (resumed or forked sessions replay earlier turns — about half of all lines) are de-duplicated on message + request id.
 
 ## Credits
 

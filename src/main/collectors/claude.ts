@@ -1,6 +1,5 @@
 import { UsageSnapshot, emptySnapshot } from './types'
 import { collectClaudeWeb, hasSession } from './claude-web'
-import { claudeTokenTotals } from './tokens'
 import { t } from '../../shared/i18n'
 
 // Claude shows usage ONLY when logged in (claude.ai sessionKey → 남은 %).
@@ -25,12 +24,7 @@ export async function collectClaude(): Promise<UsageSnapshot> {
   }
 
   const web = await collectClaudeWeb(true).catch(() => null)
-  if (web) {
-    web.totalTokens = (await claudeTokenTotals().catch(() => null)) ?? undefined
-    lastGood = web
-    lastGoodTs = Date.now()
-    return web
-  }
+  if (web) { lastGood = web; lastGoodTs = Date.now(); return web }
 
   // Session present but fetch failed: hold the last good briefly, else re-login.
   if (lastGood && Date.now() - lastGoodTs < CACHE_GRACE) return { ...lastGood, stale: true }
