@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, powerMonitor } from 'electron'
 import path from 'path'
 import { getSettings, setEnabled, patchSettings } from './settings'
 import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots } from './poller'
 import { ProviderId } from './collectors/types'
-import { loginClaude, clearSession } from './collectors/claude-web'
+import { loginClaude, clearSession, closeFetchWindow } from './collectors/claude-web'
+import { closeCodexWindow } from './collectors/codex-web'
 import { setLang, detectLang, getLang, t } from '../shared/i18n'
 
 let win: BrowserWindow | null = null
@@ -123,7 +124,7 @@ function registerIpc() {
     return true
   })
   ipcMain.on('autosize', (_e, height: number) => {
-    if (!win) return
+    if (!win || win.isDestroyed()) return
     const h = Math.min(Math.max(Math.round(height), WIDGET_MIN_H), WIDGET_MAX_H)
     const [, cur] = win.getSize()
     if (Math.abs(cur - h) > 1) win.setContentSize(WIDGET_W, h)
@@ -139,11 +140,41 @@ app.whenReady().then(() => {
   // Keep the OS login-item registration in sync with the saved preference.
   applyLaunchAtStartup(getSettings().launchAtStartup)
   startPolling()
+  registerPowerHandlers()
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow() })
 })
+
+// Sleep/wake handling. The hidden collector windows hold remote pages (claude.ai,
+// chatgpt.com); across a suspend their render processes can be reaped while the
+// BrowserWindow objects survive, and the poll that fires immediately on wake then
+// touches dead renderers. Tear them down before sleeping and rebuild after, giving
+// the network a few seconds to come back first.
+const RESUME_DELAY_MS = 5000
+let resumeTimer: NodeJS.Timeout | null = null
+
+function releaseCollectorWindows() {
+  closeFetchWindow()
+  closeCodexWindow()
+}
+
+function registerPowerHandlers() {
+  powerMonitor.on('suspend', () => {
+    if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null }
+    stopPolling()
+    releaseCollectorWindows()
+  })
+  powerMonitor.on('resume', () => {
+    releaseCollectorWindows() // anything left from before the sleep is suspect
+    if (resumeTimer) clearTimeout(resumeTimer)
+    resumeTimer = setTimeout(() => { resumeTimer = null; startPolling() }, RESUME_DELAY_MS)
+  })
+}
 
 app.on('window-all-closed', () => {
   // Keep running in tray; quit only on explicit action.
 })
 
-app.on('before-quit', () => stopPolling())
+app.on('before-quit', () => {
+  stopPolling()
+  releaseCollectorWindows()
+})

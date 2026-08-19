@@ -79,12 +79,29 @@ async function applyCookie(): Promise<void> {
   try { await setSessionCookie(key) } catch { /* noop */ }
 }
 
+/** A window whose render process died still reports isDestroyed() === false, so
+ *  the webContents has to be checked too. Using such a window is what turns a
+ *  reaped renderer (e.g. after the machine sleeps) into a native crash. */
+function alive(w: BrowserWindow | null): w is BrowserWindow {
+  return !!w && !w.isDestroyed() && !w.webContents.isDestroyed()
+}
+
+/** Drop the hidden fetch window; it is recreated on the next fetch. */
+export function closeFetchWindow(): void {
+  const w = fetchWin
+  fetchWin = null
+  if (!w) return
+  setImmediate(() => { try { if (!w.isDestroyed()) w.destroy() } catch { /* already gone */ } })
+}
+
 async function ensureWin(): Promise<BrowserWindow> {
-  if (fetchWin && !fetchWin.isDestroyed()) return fetchWin
+  if (alive(fetchWin)) return fetchWin
+  closeFetchWindow()
   fetchWin = new BrowserWindow({
     show: false,
     webPreferences: { partition: PARTITION, offscreen: false, javascript: true }
   })
+  fetchWin.webContents.on('render-process-gone', () => closeFetchWindow())
   return fetchWin
 }
 

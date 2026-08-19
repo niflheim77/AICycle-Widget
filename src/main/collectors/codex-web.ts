@@ -31,10 +31,26 @@ function readAuth(): { token: string; account?: string } | null {
   }
 }
 
+/** See claude-web: a dead render process leaves isDestroyed() false on the window. */
+function alive(w: BrowserWindow | null): w is BrowserWindow {
+  return !!w && !w.isDestroyed() && !w.webContents.isDestroyed()
+}
+
+/** Drop the hidden window; the next fetch recreates and re-primes it. */
+export function closeCodexWindow(): void {
+  const w = win
+  win = null
+  primed = false
+  if (!w) return
+  setImmediate(() => { try { if (!w.isDestroyed()) w.destroy() } catch { /* already gone */ } })
+}
+
 async function ensureWin(): Promise<BrowserWindow> {
-  if (win && !win.isDestroyed()) return win
+  if (alive(win)) return win
+  closeCodexWindow()
   eSession.fromPartition(PARTITION).setUserAgent(CHROME_UA)
   win = new BrowserWindow({ show: false, webPreferences: { partition: PARTITION } })
+  win.webContents.on('render-process-gone', () => closeCodexWindow())
   return win
 }
 
