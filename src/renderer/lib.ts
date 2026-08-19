@@ -14,6 +14,8 @@ export function arcColor(u: number): string {
 
 export function fmtTokens(n?: number): string {
   if (n == null) return '—'
+  // Cumulative totals reach billions once cache reads are counted.
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + 'B'
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'k'
   return String(n)

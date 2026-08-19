@@ -18,6 +18,16 @@ export interface ExtraUsage {
   enabled: boolean
 }
 
+export interface TokenTotals {
+  input: number
+  output: number
+  cacheWrite: number
+  cacheRead: number
+  total: number
+  since?: string
+  partial?: boolean
+}
+
 export interface UsageSnapshot {
   provider: ProviderId
   available: boolean
@@ -30,6 +40,7 @@ export interface UsageSnapshot {
   source: 'api' | 'local' | 'none'
   needsLogin?: boolean
   extraInfo?: string[]
+  totalTokens?: TokenTotals
 }
 
 export interface Settings {

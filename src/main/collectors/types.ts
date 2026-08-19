@@ -24,6 +24,18 @@ export interface ExtraUsage {
   enabled: boolean
 }
 
+export interface TokenTotals {
+  input: number
+  output: number
+  cacheWrite: number
+  cacheRead: number
+  total: number
+  /** ISO timestamp of the oldest entry counted */
+  since?: string
+  /** true when the log only retains a recent slice, so this is not all-time */
+  partial?: boolean
+}
+
 export interface UsageSnapshot {
   provider: ProviderId
   /** false when no data source is available on this machine */
@@ -41,6 +53,8 @@ export interface UsageSnapshot {
   needsLogin?: boolean
   /** extra info lines shown in the detail view (plan, credits, local tokens…) */
   extraInfo?: string[]
+  /** cumulative tokens from this machine's local logs, for the detail view */
+  totalTokens?: TokenTotals
 }
 
 export function emptySnapshot(provider: ProviderId, note?: string): UsageSnapshot {
