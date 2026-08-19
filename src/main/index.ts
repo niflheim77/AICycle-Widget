@@ -5,6 +5,7 @@ import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots }
 import { ProviderId } from './collectors/types'
 import { loginClaude, clearSession, closeFetchWindow } from './collectors/claude-web'
 import { closeCodexWindow } from './collectors/codex-web'
+import { loginGrok, clearGrokSession, closeGrokWindow } from './collectors/grok-web'
 import { setLang, detectLang, getLang, t } from '../shared/i18n'
 
 let win: BrowserWindow | null = null
@@ -113,13 +114,14 @@ function registerIpc() {
     restartPolling()
     return s
   })
-  ipcMain.handle('claude-login', async () => {
-    const ok = await loginClaude()
+  ipcMain.handle('login', async (_e, provider: ProviderId) => {
+    const ok = provider === 'grok' ? await loginGrok() : await loginClaude()
     if (ok) await pollOnce()
     return ok
   })
-  ipcMain.handle('claude-logout', async () => {
-    clearSession()
+  ipcMain.handle('logout', async (_e, provider: ProviderId) => {
+    if (provider === 'grok') clearGrokSession()
+    else clearSession()
     await pollOnce()
     return true
   })
@@ -155,6 +157,7 @@ let resumeTimer: NodeJS.Timeout | null = null
 function releaseCollectorWindows() {
   closeFetchWindow()
   closeCodexWindow()
+  closeGrokWindow()
 }
 
 function registerPowerHandlers() {

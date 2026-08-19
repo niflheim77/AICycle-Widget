@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron'
 import { collectClaude } from './collectors/claude'
 import { collectCodex } from './collectors/codex'
+import { collectGrok } from './collectors/grok'
 import { collectAntigravity } from './collectors/antigravity'
 import { UsageSnapshot, ProviderId, emptySnapshot } from './collectors/types'
 import { getSettings } from './settings'
@@ -8,6 +9,7 @@ import { getSettings } from './settings'
 const COLLECTORS: Record<ProviderId, () => Promise<UsageSnapshot>> = {
   claude: collectClaude,
   codex: collectCodex,
+  grok: collectGrok,
   antigravity: collectAntigravity
 }
 

@@ -1,4 +1,4 @@
-export type ProviderId = 'claude' | 'codex' | 'antigravity'
+export type ProviderId = 'claude' | 'codex' | 'grok' | 'antigravity'
 
 export interface UsageWindow {
   window_type: 'five_hour' | 'seven_day' | 'seven_day_opus' | 'daily'
@@ -52,8 +52,8 @@ declare global {
       setEnabled: (provider: ProviderId, enabled: boolean) => Promise<Settings>
       patchSettings: (patch: Partial<Settings>) => Promise<Settings>
       autosize: (height: number) => void
-      claudeLogin: () => Promise<boolean>
-      claudeLogout: () => Promise<boolean>
+      login: (provider: ProviderId) => Promise<boolean>
+      logout: (provider: ProviderId) => Promise<boolean>
       quit: () => void
       onSnapshots: (cb: (data: Record<string, UsageSnapshot>) => void) => () => void
       onOpenSettings: (cb: () => void) => () => void

@@ -10,8 +10,8 @@ const api = {
   patchSettings: (patch: Record<string, unknown>) =>
     ipcRenderer.invoke('patch-settings', patch),
   autosize: (height: number) => ipcRenderer.send('autosize', height),
-  claudeLogin: () => ipcRenderer.invoke('claude-login'),
-  claudeLogout: () => ipcRenderer.invoke('claude-logout'),
+  login: (provider: string) => ipcRenderer.invoke('login', provider),
+  logout: (provider: string) => ipcRenderer.invoke('logout', provider),
   quit: () => ipcRenderer.send('quit'),
   onSnapshots: (cb: (data: any) => void) => {
     const listener = (_e: unknown, data: any) => cb(data)

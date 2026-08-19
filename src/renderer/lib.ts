@@ -63,5 +63,7 @@ export function fiveHour(windows: UsageWindow[]): UsageWindow | undefined {
 export const PROVIDER_META: Record<string, { name: string; color: string }> = {
   claude: { name: 'Claude', color: '#d97757' },
   codex: { name: 'Codex', color: '#10a37f' },
-  antigravity: { name: 'Antigravity', color: '#4285f4' }
+  grok: { name: 'Grok', color: '#c9ccd4' },
+  // Sourced from the Antigravity IDE, shown as Gemini — the models it reports on.
+  antigravity: { name: 'Gemini', color: '#4285f4' }
 }

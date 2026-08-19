@@ -6,7 +6,7 @@ import { DetailView } from './components/DetailView'
 import { SettingsView } from './components/SettingsView'
 import { t, setLang } from '../shared/i18n'
 
-const ORDER: ProviderId[] = ['claude', 'codex', 'antigravity']
+const ORDER: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
 
 export default function App() {
   const [settings, setSettings] = useState<Settings | null>(null)

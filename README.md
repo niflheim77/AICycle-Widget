@@ -10,7 +10,7 @@
 
 ---
 
-AICycle Widget is a tiny, compact, always-on-top panel that unifies usage monitoring across **Claude**, **OpenAI Codex**, and **Google Antigravity**. Each provider can be toggled on/off, every window shows how much you've used plus how long until it refreshes, and clicking a card opens a detail view with plan info and extra usage.
+AICycle Widget is a tiny, compact, always-on-top panel that unifies usage monitoring across **Claude**, **OpenAI Codex**, **Grok**, and **Gemini**. Each provider can be toggled on/off, every window shows how much you've used plus how long until it refreshes, and clicking a card opens a detail view with plan info and extra usage.
 
 Inspired by [OpenTokenMonitor](https://github.com/Hitheshkaranth/OpenTokenMonitor) and [claude-usage-widget](https://github.com/SlavomirDurej/claude-usage-widget), rebuilt from scratch in **Electron** (Node only — no Rust toolchain required).
 
@@ -40,7 +40,8 @@ All data is read locally / from the official services you're already signed into
 |---|---|---|
 | **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, persisted as a cookie) | Shows 5H / 7D % + reset and extra usage (overage / prepaid). Not logged in → just a login button. |
 | **Codex** | `chatgpt.com/backend-api/codex/usage` using the token in `~/.codex/auth.json` | Fetched through a hidden Chromium window (passes Cloudflare). Shows 5H / weekly % + reset, plan, credits. Falls back to local token counts from `~/.codex/logs_2.sqlite`. |
-| **Antigravity** | The Antigravity IDE's local Language Server (loopback, no extra auth) | Live only while the IDE is open; shows prompt/flow credit usage + reset and full plan details. When closed, the last fetched value is cached and shown. |
+| **Grok** | `grok.com/rest/rate-limits` via a one-time in-app login | Fetched from inside the page so it carries the session. Shows the quota window (e.g. 2H) as used %, plus queries used / total. The endpoint reports the window length but no reset time, so the reset clock is estimated from when the window was first seen partly used. |
+| **Gemini** | The Antigravity IDE's local Language Server (loopback, no extra auth) | Live only while the IDE is open; shows prompt/flow credit usage + reset and full plan details. When closed, the last fetched value is cached and shown. |
 
 ## Requirements
 
@@ -73,7 +74,8 @@ src/
 
 - The Claude OAuth usage endpoint (`api.anthropic.com/oauth/usage`) is heavily rate-limited and is **not** used; the widget uses the `claude.ai` web session instead.
 - Reading the session straight out of Chrome's encrypted cookie store is intentionally not implemented.
-- Antigravity has no live data while its IDE is closed (cached value is shown instead).
+- The Gemini card reads the Antigravity IDE's language server, so it has no live data while that IDE is closed (the cached value is shown instead).
+- Grok's quota endpoint is an internal grok.com API, not a documented one — it can change without notice.
 
 ## Credits
 

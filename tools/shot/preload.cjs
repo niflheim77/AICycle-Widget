@@ -23,6 +23,13 @@ const snaps = {
       { window_type: 'seven_day', utilization: 0.61, label: '7D', resets_at: iso(5 * D) }
     ]
   },
+  grok: {
+    provider: 'grok', available: true, source: 'api', stale: false, fetched_at: at,
+    windows: [
+      { window_type: 'daily', utilization: 0.52, used: 13, limit: 25, remaining: 12, label: '2H', resets_at: iso(1 * H + 24 * M) }
+    ],
+    extraInfo: ['Model: grok-4-1', 'Queries used: 13 / 25']
+  },
   antigravity: {
     provider: 'antigravity', available: true, source: 'api', stale: false, fetched_at: at,
     windows: [
@@ -32,7 +39,7 @@ const snaps = {
 }
 
 const settings = {
-  enabledProviders: { claude: true, codex: true, antigravity: true },
+  enabledProviders: { claude: true, codex: true, grok: true, antigravity: true },
   refreshSeconds: 60, use24h: true, alwaysOnTop: true, launchAtStartup: false,
   claudeLimit5h: 0, claudeLimit7d: 0
 }

@@ -64,8 +64,11 @@ html, body, #root {
 /* Toggles (#1) */
 .toggles { display: flex; gap: 4px; padding: 5px 7px 2px; -webkit-app-region: no-drag; }
 .toggle {
-  flex: 1; padding: 4px 0; border-radius: 6px; cursor: pointer;
+  /* Four providers share a 300px window, so let the buttons shrink below their
+     text width and ellipsize rather than overflow the row. */
+  flex: 1 1 0; min-width: 0; padding: 4px 2px; border-radius: 6px; cursor: pointer;
   font-size: var(--fs-window); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   background: var(--panel); border: 1px solid var(--border); color: var(--muted);
   transition: all 0.12s;
 }

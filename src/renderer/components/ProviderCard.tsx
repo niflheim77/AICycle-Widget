@@ -1,23 +1,25 @@
 import { useState } from 'react'
-import type { UsageSnapshot } from '../types'
+import type { ProviderId, UsageSnapshot } from '../types'
 import { WindowBar } from './WindowBar'
 import { PROVIDER_META } from '../lib'
 import { t } from '../../shared/i18n'
 
-function ConnectButtons() {
+function ConnectButtons({ provider }: { provider: ProviderId }) {
   const [busy, setBusy] = useState(false)
+  const meta = PROVIDER_META[provider]
   return (
     <div className="connect">
       <button
         className="login-btn"
+        style={provider === 'grok' ? { background: meta.color, color: '#1a1a1f' } : undefined}
         disabled={busy}
         onClick={async (e) => {
           e.stopPropagation()
           setBusy(true)
-          try { await window.aicycle.claudeLogin() } finally { setBusy(false) }
+          try { await window.aicycle.login(provider) } finally { setBusy(false) }
         }}
       >
-        {busy ? t('btn.loggingIn') : t('btn.claudeLogin')}
+        {busy ? t('btn.loggingIn') : t('btn.login', meta.name)}
       </button>
     </div>
   )
@@ -35,7 +37,7 @@ export function ProviderCard({ snap, use24h }: { snap: UsageSnapshot; use24h: bo
           <span className="provider-name">{meta.name}</span>
         </div>
         <div className="card-note">{snap.note ?? t('state.noData')}</div>
-        {snap.needsLogin && <ConnectButtons />}
+        {snap.needsLogin && <ConnectButtons provider={snap.provider} />}
       </div>
     )
   }
@@ -55,7 +57,7 @@ export function ProviderCard({ snap, use24h }: { snap: UsageSnapshot; use24h: bo
         {snap.needsLogin && (
           <>
             <div className="card-hint muted">{snap.note ?? t('claude.loginPrompt')}</div>
-            <ConnectButtons />
+            <ConnectButtons provider={snap.provider} />
           </>
         )}
       </div>

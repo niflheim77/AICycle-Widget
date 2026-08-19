@@ -13,7 +13,7 @@ export interface Settings {
 }
 
 const defaults: Settings = {
-  enabledProviders: { claude: true, codex: true, antigravity: false },
+  enabledProviders: { claude: true, codex: true, grok: false, antigravity: false },
   refreshSeconds: 60,
   use24h: true,
   alwaysOnTop: true,

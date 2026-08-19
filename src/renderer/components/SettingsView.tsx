@@ -53,7 +53,8 @@ export function SettingsView({
 
       <div className="set-actions">
         <button className="set-btn" onClick={() => window.aicycle.refresh()}>{t('settings.refreshNow')}</button>
-        <button className="set-btn" onClick={() => window.aicycle.claudeLogout()}>{t('settings.claudeLogout')}</button>
+        <button className="set-btn" onClick={() => window.aicycle.logout('claude')}>{t('settings.claudeLogout')}</button>
+        <button className="set-btn" onClick={() => window.aicycle.logout('grok')}>{t('settings.grokLogout')}</button>
         <button className="set-btn danger" onClick={() => window.aicycle.quit()}>{t('settings.quit')}</button>
       </div>
     </div>
