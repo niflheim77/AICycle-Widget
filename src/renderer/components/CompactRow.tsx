@@ -12,11 +12,12 @@ function Slot({ snap, weekly, onClick }: { snap: UsageSnapshot; weekly: boolean;
   return (
     <div className="cslot" onClick={onClick} title={meta.name}>
       {windows.length === 0 ? (
-        <div className="cslot-empty">
-          <span className="cslot-dash" style={{ color: meta.color }}>—</span>
-          <span className="cslot-when muted">
-            {snap.needsLogin ? t('compact.login') : t('compact.noData')}
-          </span>
+        <div
+          className="cslot-empty"
+          style={snap.needsLogin ? { color: meta.color } : undefined}
+          title={snap.note}
+        >
+          {snap.needsLogin ? t('compact.login') : t('compact.noData')}
         </div>
       ) : (
         windows.map((w, i) => {
