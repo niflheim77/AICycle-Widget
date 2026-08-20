@@ -60,6 +60,17 @@ export function fiveHour(windows: UsageWindow[]): UsageWindow | undefined {
   return windows.find((w) => w.window_type === 'five_hour')
 }
 
+/** The one or two windows compact mode shows: the short window on top and the
+ *  weekly one under it. Providers that report a single window (Grok, Gemini)
+ *  yield just that one. seven_day_opus is left to the detail view. */
+export function compactWindows(windows: UsageWindow[]): UsageWindow[] {
+  const short = fiveHour(windows) ?? windows.find((w) => w.window_type === 'daily')
+  const weekly = windows.find((w) => w.window_type === 'seven_day')
+  const picked = [short ?? windows[0], weekly].filter((w): w is UsageWindow => !!w)
+  // De-dupe in case the same window matched both slots.
+  return picked.filter((w, i) => picked.indexOf(w) === i)
+}
+
 export const PROVIDER_META: Record<string, { name: string; color: string }> = {
   claude: { name: 'Claude', color: '#d97757' },
   codex: { name: 'Codex', color: '#10a37f' },

@@ -12,7 +12,9 @@ let win: BrowserWindow | null = null
 let tray: Tray | null = null
 
 const WIDGET_W = 300
-const WIDGET_MIN_H = 120
+// Low enough for compact mode (one row, possibly a single provider). Normal mode
+// always renders taller than this, so autosize still fits content in both modes.
+const WIDGET_MIN_H = 70
 const WIDGET_MAX_H = 900
 // Dev: <root>/resources. Packaged: extraResources at process.resourcesPath/resources.
 const ICON_PATH = app.isPackaged

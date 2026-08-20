@@ -41,16 +41,16 @@ const snaps = {
 const settings = {
   enabledProviders: { claude: true, codex: true, grok: true, antigravity: true },
   refreshSeconds: 60, use24h: true, alwaysOnTop: true, launchAtStartup: false,
-  claudeLimit5h: 0, claudeLimit7d: 0
+  compact: false, claudeLimit5h: 0, claudeLimit7d: 0
 }
 
 window.aicycle = {
   getLang: () => Promise.resolve('en'),
-  getSettings: () => Promise.resolve(settings),
+  getSettings: () => Promise.resolve({ ...settings }),
   getSnapshots: () => Promise.resolve(snaps),
   refresh: () => Promise.resolve(snaps),
   setEnabled: () => Promise.resolve(settings),
-  patchSettings: () => Promise.resolve(settings),
+  patchSettings: (patch) => { Object.assign(settings, patch); return Promise.resolve({ ...settings }) },
   autosize: (h) => ipcRenderer.send('shot-autosize', h),
   claudeLogin: () => Promise.resolve(true),
   claudeLogout: () => Promise.resolve(true),

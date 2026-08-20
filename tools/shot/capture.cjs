@@ -42,10 +42,17 @@ app.whenReady().then(async () => {
   )
   await wait(600)
 
-  await shoot(win, 'compact.png')
+  await shoot(win, 'normal.png')
 
-  // Settings view → click the gear (2nd header icon).
-  await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[1].click()")
+  // Compact mode → the first header icon toggles it.
+  await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[0].click()")
+  await wait(400)
+  await shoot(win, 'compact-mode.png')
+  await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[0].click()")
+  await wait(400)
+
+  // Settings view → click the gear (3rd header icon now).
+  await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[2].click()")
   await wait(350)
   await shoot(win, 'settings.png')
 

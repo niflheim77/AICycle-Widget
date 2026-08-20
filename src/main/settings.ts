@@ -7,6 +7,8 @@ export interface Settings {
   use24h: boolean
   alwaysOnTop: boolean
   launchAtStartup: boolean
+  /** One-row layout: icon toggles plus a single row of per-provider slots. */
+  compact: boolean
   /** Local-mode token limits (0 = unset). Used to show 남은 % without login. */
   claudeLimit5h: number
   claudeLimit7d: number
@@ -18,6 +20,7 @@ const defaults: Settings = {
   use24h: true,
   alwaysOnTop: true,
   launchAtStartup: false,
+  compact: false,
   claudeLimit5h: 0,
   claudeLimit7d: 0
 }
@@ -31,6 +34,7 @@ export function getSettings(): Settings {
     use24h: store.get('use24h'),
     alwaysOnTop: store.get('alwaysOnTop'),
     launchAtStartup: store.get('launchAtStartup'),
+    compact: store.get('compact'),
     claudeLimit5h: store.get('claudeLimit5h'),
     claudeLimit7d: store.get('claudeLimit7d')
   }

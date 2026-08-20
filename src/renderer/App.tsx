@@ -4,6 +4,7 @@ import { ProviderCard } from './components/ProviderCard'
 import { ProviderToggles } from './components/ProviderToggles'
 import { DetailView } from './components/DetailView'
 import { SettingsView } from './components/SettingsView'
+import { CompactRow } from './components/CompactRow'
 import { t, setLang } from '../shared/i18n'
 
 const ORDER: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
@@ -77,6 +78,19 @@ export default function App() {
       <div className="drag-bar">
         <span className="title">AICycle</span>
         <div className="drag-actions">
+          <button
+            className={`icon-btn ${settings.compact ? 'on' : ''}`}
+            title={settings.compact ? t('compact.expand') : t('compact.collapse')}
+            onClick={() => onPatch({ compact: !settings.compact })}
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <g strokeWidth="2">
+                {settings.compact
+                  ? <path d="M4 4h16v16H4zM4 10h16" />
+                  : <path d="M4 4h16v16H4zM4 10h16M4 15h16" />}
+              </g>
+            </svg>
+          </button>
           <button className="icon-btn" title={t('settings.refreshNow')} onClick={() => window.aicycle.refresh()}>
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
               <g strokeWidth="2">
@@ -105,20 +119,24 @@ export default function App() {
         </div>
       </div>
 
-      <ProviderToggles settings={settings} onToggle={onToggle} />
+      <ProviderToggles settings={settings} onToggle={onToggle} compact={settings.compact} />
 
-      <div className="cards">
-        {enabledIds.length === 0 && <div className="card-note">{t('state.noProviders')}</div>}
-        {enabledIds.map((id) => {
-          const snap = snaps[id]
-          if (!snap) return <div key={id} className="card"><div className="card-note">{t('state.loading')}</div></div>
-          return (
-            <div key={id} className="card-click" onClick={() => setDetail(id)}>
-              <ProviderCard snap={snap} use24h={use24h} />
-            </div>
-          )
-        })}
-      </div>
+      {settings.compact ? (
+        <CompactRow ids={enabledIds} snaps={snaps} onOpen={setDetail} />
+      ) : (
+        <div className="cards">
+          {enabledIds.length === 0 && <div className="card-note">{t('state.noProviders')}</div>}
+          {enabledIds.map((id) => {
+            const snap = snaps[id]
+            if (!snap) return <div key={id} className="card"><div className="card-note">{t('state.loading')}</div></div>
+            return (
+              <div key={id} className="card-click" onClick={() => setDetail(id)}>
+                <ProviderCard snap={snap} use24h={use24h} />
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

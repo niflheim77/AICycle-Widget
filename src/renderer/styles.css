@@ -207,3 +207,36 @@ html, body, #root {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Compact mode: icon toggles + a single row of provider slots */
+.icon-btn.on { color: var(--text); background: var(--panel-2); }
+.toggles-compact { justify-content: center; gap: 6px; padding: 6px 8px 4px; }
+.itoggle {
+  -webkit-app-region: no-drag;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0; flex: none;
+  border-radius: 6px; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+  transition: all 0.12s;
+}
+.itoggle.off { opacity: 0.45; }
+.itoggle:hover { filter: brightness(1.25); }
+
+.crow { display: flex; gap: 4px; padding: 2px 8px 8px; -webkit-app-region: no-drag; }
+.cslot {
+  flex: 1 1 0; min-width: 0; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 4px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.cslot:hover { border-color: var(--muted); }
+.cwin { display: flex; flex-direction: column; }
+.cwin-top { display: flex; align-items: baseline; justify-content: space-between; gap: 2px; }
+.cwin-label { font-size: 11px; font-weight: 600; }
+.cwin-pct { font-size: 11px; font-weight: 700; }
+.cwin-track { height: 3px; background: var(--panel-2); border-radius: 2px; margin: 3px 0 2px; overflow: hidden; }
+.cwin-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.cslot-when { font-size: 11px; text-align: right; }
+.cslot-empty { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 0; }
+.cslot-dash { font-size: 12px; font-weight: 700; }
+.cslot-empty .cslot-when { text-align: center; }

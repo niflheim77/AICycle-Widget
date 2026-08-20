@@ -38,6 +38,7 @@ export interface Settings {
   use24h: boolean
   alwaysOnTop: boolean
   launchAtStartup: boolean
+  compact: boolean
   claudeLimit5h: number
   claudeLimit7d: number
 }
