@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { ProviderId, Settings, UsageSnapshot } from './types'
+import type { Density, ProviderId, Settings, UsageSnapshot } from './types'
 import { ProviderCard } from './components/ProviderCard'
 import { ProviderToggles } from './components/ProviderToggles'
 import { DetailView } from './components/DetailView'
@@ -8,6 +8,25 @@ import { CompactRow } from './components/CompactRow'
 import { t, setLang } from '../shared/i18n'
 
 const ORDER: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
+
+// The title-bar button cycles the three layouts. The icon is a box with one row
+// per step of compaction, so it reads as the density you are currently in; the
+// tooltip names the layout the next click gives you.
+const NEXT_DENSITY: Record<Density, Density> = {
+  normal: 'compact',
+  compact: 'super',
+  super: 'normal'
+}
+const DENSITY_ICON: Record<Density, string> = {
+  normal: 'M4 4h16v16H4zM4 10h16M4 15h16',
+  compact: 'M4 4h16v16H4zM4 10h16',
+  super: 'M4 4h16v16H4z'
+}
+const DENSITY_LABEL: Record<Density, string> = {
+  normal: 'density.toCompact',
+  compact: 'density.toSuper',
+  super: 'density.toNormal'
+}
 
 export default function App() {
   const [settings, setSettings] = useState<Settings | null>(null)
@@ -44,6 +63,8 @@ export default function App() {
 
   const use24h = settings.use24h
   const enabledIds = ORDER.filter((id) => settings.enabledProviders[id])
+  // Both dense layouts share the one-row body; only 'compact' keeps the weekly row.
+  const dense = settings.density !== 'normal'
 
   if (showSettings) {
     return (
@@ -74,20 +95,18 @@ export default function App() {
   }
 
   return (
-    <div className={`app ${settings.compact ? 'app-compact' : ''}`} ref={rootRef}>
+    <div className={`app ${dense ? 'app-compact' : ''}`} ref={rootRef}>
       <div className="drag-bar">
         <span className="title">AICycle</span>
         <div className="drag-actions">
           <button
-            className={`icon-btn ${settings.compact ? 'on' : ''}`}
-            title={settings.compact ? t('compact.expand') : t('compact.collapse')}
-            onClick={() => onPatch({ compact: !settings.compact })}
+            className={`icon-btn ${dense ? 'on' : ''}`}
+            title={t(DENSITY_LABEL[settings.density])}
+            onClick={() => onPatch({ density: NEXT_DENSITY[settings.density] })}
           >
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
               <g strokeWidth="2">
-                {settings.compact
-                  ? <path d="M4 4h16v16H4zM4 10h16" />
-                  : <path d="M4 4h16v16H4zM4 10h16M4 15h16" />}
+                <path d={DENSITY_ICON[settings.density]} />
               </g>
             </svg>
           </button>
@@ -119,10 +138,10 @@ export default function App() {
         </div>
       </div>
 
-      <ProviderToggles settings={settings} onToggle={onToggle} compact={settings.compact} />
+      <ProviderToggles settings={settings} onToggle={onToggle} compact={dense} />
 
-      {settings.compact ? (
-        <CompactRow ids={enabledIds} snaps={snaps} weekly={settings.compactWeekly} onOpen={setDetail} />
+      {dense ? (
+        <CompactRow ids={enabledIds} snaps={snaps} weekly={settings.density === 'compact'} onOpen={setDetail} />
       ) : (
         <div className="cards">
           {enabledIds.length === 0 && <div className="card-note">{t('state.noProviders')}</div>}

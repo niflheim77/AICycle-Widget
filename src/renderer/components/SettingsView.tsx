@@ -39,10 +39,6 @@ export function SettingsView({
         <Toggle on={settings.use24h} onClick={() => onPatch({ use24h: !settings.use24h })} />
       </div>
       <div className="set-row">
-        <span>{t('settings.compactWeekly')}</span>
-        <Toggle on={settings.compactWeekly} onClick={() => onPatch({ compactWeekly: !settings.compactWeekly })} />
-      </div>
-      <div className="set-row">
         <span>{t('settings.refresh')}</span>
         <select
           className="set-select"

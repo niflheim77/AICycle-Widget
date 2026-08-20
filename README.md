@@ -20,18 +20,22 @@ Inspired by [OpenTokenMonitor](https://github.com/Hitheshkaranth/OpenTokenMonito
 - 🟢 **Usage at a glance** — each window (5H / 7D / credits) shows the **used %** with a matching bar.
 - ⏱️ **Time-to-refresh first** — how much time is left is shown prominently, with the exact reset clock alongside.
 - 🔍 **Detail view** — click any card for plan tier, extra usage / overage ($), credits, and account details.
-- 🗜️ **Compact mode** — one icon per provider and a single row of slots instead of stacked cards, so all four fit in about a third of the height. Toggle it from the title bar.
+- 🗜️ **Three densities** — the first title-bar button cycles normal → compact → super compact. Compact swaps the stacked cards for one icon per provider and a single row of slots; super compact drops the weekly row on top of that. With all four providers on that is 500px tall, then 159, then 116.
 - 🌐 **Auto language** — UI follows your OS language (English / Korean); compact labels stay short (`5H`, `7D`).
 - 🪶 **Compact & always-on-top** — auto-sizes to its content; lives in the corner without taking over your screen.
 - ⚙️ **Settings screen** — always-on-top, launch-at-startup, 24-hour time, refresh interval, plus refresh / Claude logout / quit (open via the gear icon or the tray).
 
 ## Screenshots
 
-| Normal | Compact mode | Detail | Settings |
-|---|---|---|---|
-| <img src="assets/shots/normal.png" width="280" /> | <img src="assets/shots/compact-mode.png" width="280" /> | <img src="assets/shots/detail.png" width="280" /> | <img src="assets/shots/settings.png" width="280" /> |
+| Normal | Compact | Super compact |
+|---|---|---|
+| <img src="assets/shots/normal.png" width="260" /> | <img src="assets/shots/compact-mode.png" width="260" /> | <img src="assets/shots/super-compact.png" width="260" /> |
 
-Each window shows the **used %** with a bar, the time until refresh, and the exact reset clock. Click a card for plan tier and extra usage; open the gear (⚙) for settings. The first title-bar button switches to compact mode, which keeps the same numbers but lays them out in one row.
+| Detail | Settings |
+|---|---|
+| <img src="assets/shots/detail.png" width="260" /> | <img src="assets/shots/settings.png" width="260" /> |
+
+Each window shows the **used %** with a bar, the time until refresh, and the exact reset clock. Click a card for plan tier and extra usage; open the gear (⚙) for settings. The first title-bar button cycles the density — its icon loses a row at each step — and the compact layouts also narrow the window to whatever the enabled providers actually need.
 
 ## How it gets your usage
 

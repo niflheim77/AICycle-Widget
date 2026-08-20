@@ -1,17 +1,19 @@
 import Store from 'electron-store'
 import { ProviderId } from './collectors/types'
 
+export type Density = 'normal' | 'compact' | 'super'
+
 export interface Settings {
   enabledProviders: Record<ProviderId, boolean>
   refreshSeconds: number
   use24h: boolean
   alwaysOnTop: boolean
   launchAtStartup: boolean
-  /** One-row layout: icon toggles plus a single row of per-provider slots. */
-  compact: boolean
-  /** Show the weekly window under the short one in compact mode. Off halves the
-   *  slot height for providers that report two windows. */
-  compactWeekly: boolean
+  /** How tightly the widget packs, cycled from the title bar:
+   *  normal  — stacked provider cards
+   *  compact — one row of slots, short window over weekly
+   *  super   — the same row without the weekly window */
+  density: Density
   /** Local-mode token limits (0 = unset). Used to show 남은 % without login. */
   claudeLimit5h: number
   claudeLimit7d: number
@@ -23,8 +25,7 @@ const defaults: Settings = {
   use24h: true,
   alwaysOnTop: true,
   launchAtStartup: false,
-  compact: false,
-  compactWeekly: true,
+  density: 'normal',
   claudeLimit5h: 0,
   claudeLimit7d: 0
 }
@@ -38,8 +39,7 @@ export function getSettings(): Settings {
     use24h: store.get('use24h'),
     alwaysOnTop: store.get('alwaysOnTop'),
     launchAtStartup: store.get('launchAtStartup'),
-    compact: store.get('compact'),
-    compactWeekly: store.get('compactWeekly'),
+    density: store.get('density'),
     claudeLimit5h: store.get('claudeLimit5h'),
     claudeLimit7d: store.get('claudeLimit7d')
   }

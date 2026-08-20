@@ -1,5 +1,7 @@
 export type ProviderId = 'claude' | 'codex' | 'grok' | 'antigravity'
 
+export type Density = 'normal' | 'compact' | 'super'
+
 export interface UsageWindow {
   window_type: 'five_hour' | 'seven_day' | 'seven_day_opus' | 'daily'
   utilization: number
@@ -38,8 +40,7 @@ export interface Settings {
   use24h: boolean
   alwaysOnTop: boolean
   launchAtStartup: boolean
-  compact: boolean
-  compactWeekly: boolean
+  density: Density
   claudeLimit5h: number
   claudeLimit7d: number
 }

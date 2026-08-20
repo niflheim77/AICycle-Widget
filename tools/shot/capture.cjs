@@ -45,12 +45,16 @@ app.whenReady().then(async () => {
 
   await shoot(win, 'normal.png')
 
-  // Compact mode → the first header icon toggles it.
-  await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[0].click()")
-  await wait(400)
+  // The first header icon cycles normal → compact → super compact → normal.
+  const cycleDensity = async () => {
+    await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[0].click()")
+    await wait(400)
+  }
+  await cycleDensity()
   await shoot(win, 'compact-mode.png')
-  await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[0].click()")
-  await wait(400)
+  await cycleDensity()
+  await shoot(win, 'super-compact.png')
+  await cycleDensity() // back to normal
 
   // Settings view → click the gear (3rd header icon now).
   await win.webContents.executeJavaScript("document.querySelectorAll('.drag-actions .icon-btn')[2].click()")
