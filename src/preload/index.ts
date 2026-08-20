@@ -9,7 +9,7 @@ const api = {
     ipcRenderer.invoke('set-enabled', provider, enabled),
   patchSettings: (patch: Record<string, unknown>) =>
     ipcRenderer.invoke('patch-settings', patch),
-  autosize: (height: number) => ipcRenderer.send('autosize', height),
+  autosize: (width: number, height: number) => ipcRenderer.send('autosize', width, height),
   login: (provider: string) => ipcRenderer.invoke('login', provider),
   logout: (provider: string) => ipcRenderer.invoke('logout', provider),
   quit: () => ipcRenderer.send('quit'),

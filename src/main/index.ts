@@ -11,7 +11,11 @@ import { setLang, detectLang, getLang, t } from '../shared/i18n'
 let win: BrowserWindow | null = null
 let tray: Tray | null = null
 
+// Width is measured from content like height. Normal mode pins itself to 300 in
+// CSS; compact mode reports whatever its row needs, floored by the title bar.
 const WIDGET_W = 300
+const WIDGET_MIN_W = 120
+const WIDGET_MAX_W = 420
 // Low enough for compact mode (one row, possibly a single provider). Normal mode
 // always renders taller than this, so autosize still fits content in both modes.
 const WIDGET_MIN_H = 70
@@ -127,11 +131,12 @@ function registerIpc() {
     await pollOnce()
     return true
   })
-  ipcMain.on('autosize', (_e, height: number) => {
+  ipcMain.on('autosize', (_e, width: number, height: number) => {
     if (!win || win.isDestroyed()) return
     const h = Math.min(Math.max(Math.round(height), WIDGET_MIN_H), WIDGET_MAX_H)
-    const [, cur] = win.getSize()
-    if (Math.abs(cur - h) > 1) win.setContentSize(WIDGET_W, h)
+    const w = Math.min(Math.max(Math.round(width), WIDGET_MIN_W), WIDGET_MAX_W)
+    const [curW, cur] = win.getSize()
+    if (Math.abs(cur - h) > 1 || Math.abs(curW - w) > 1) win.setContentSize(w, h)
   })
   ipcMain.on('quit', () => app.quit())
 }

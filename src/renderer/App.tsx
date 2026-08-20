@@ -36,8 +36,8 @@ export default function App() {
   // Auto-size the window to fit the rendered content (any toggle combination).
   // Measured after every commit so it both grows and shrinks deterministically.
   useLayoutEffect(() => {
-    const h = rootRef.current?.getBoundingClientRect().height
-    if (h) window.aicycle.autosize(Math.ceil(h))
+    const box = rootRef.current?.getBoundingClientRect()
+    if (box?.height) window.aicycle.autosize(Math.ceil(box.width), Math.ceil(box.height))
   })
 
   if (!settings) return <div className="app loading" ref={rootRef}>{t('state.loading')}</div>
@@ -74,7 +74,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" ref={rootRef}>
+    <div className={`app ${settings.compact ? 'app-compact' : ''}`} ref={rootRef}>
       <div className="drag-bar">
         <span className="title">AICycle</span>
         <div className="drag-actions">

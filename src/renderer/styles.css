@@ -29,7 +29,9 @@ html, body, #root {
 }
 
 .app {
-  width: 100%;
+  /* Fixed by default — cards are designed for this width. Compact mode opts into
+     shrinking to whatever its row actually needs (see .app-compact). */
+  width: 300px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -224,7 +226,7 @@ html, body, #root {
 
 .crow { display: flex; gap: 4px; padding: 2px 8px 8px; -webkit-app-region: no-drag; }
 .cslot {
-  flex: 1 1 0; min-width: 0; cursor: pointer;
+  width: 68px; flex: none; cursor: pointer;
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 6px; padding: 5px 4px;
   display: flex; flex-direction: column; gap: 5px;
@@ -240,3 +242,8 @@ html, body, #root {
 .cslot-empty { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 2px 0; }
 .cslot-dash { font-size: 12px; font-weight: 700; }
 .cslot-empty .cslot-when { text-align: center; }
+
+/* Compact mode sizes the window to its content: the row is as wide as the
+   enabled slots, floored by the title bar's own width. */
+.app.app-compact { width: max-content; max-width: 300px; }
+.app.app-compact .card-note { width: 120px; white-space: normal; }

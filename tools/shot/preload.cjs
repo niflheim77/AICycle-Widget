@@ -49,7 +49,7 @@ window.aicycle = {
   getSettings: () => Promise.resolve({ ...settings }),
   getSnapshots: () => Promise.resolve(snaps),
   refresh: () => Promise.resolve(snaps),
-  setEnabled: () => Promise.resolve(settings),
+  setEnabled: (provider, enabled) => { settings.enabledProviders[provider] = enabled; return Promise.resolve({ ...settings }) },
   patchSettings: (patch) => { Object.assign(settings, patch); return Promise.resolve({ ...settings }) },
   autosize: (h) => ipcRenderer.send('shot-autosize', h),
   claudeLogin: () => Promise.resolve(true),

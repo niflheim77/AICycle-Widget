@@ -13,10 +13,11 @@ const W = 300, PAD = 14
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 async function shoot(win, file) {
-  const h = await win.webContents.executeJavaScript(
-    "Math.ceil(document.querySelector('.app').getBoundingClientRect().height)"
+  // Measure both dimensions: compact mode sizes its width to content too.
+  const [w, h] = await win.webContents.executeJavaScript(
+    "(r => [Math.ceil(r.width), Math.ceil(r.height)])(document.querySelector('.app').getBoundingClientRect())"
   )
-  win.setContentSize(W + PAD * 2, h + PAD * 2)
+  win.setContentSize(w + PAD * 2, h + PAD * 2)
   await wait(250)
   const img = await win.webContents.capturePage()
   fs.writeFileSync(path.join(OUT, file), img.toPNG())

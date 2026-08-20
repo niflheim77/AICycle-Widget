@@ -52,7 +52,7 @@ declare global {
       refresh: () => Promise<Record<string, UsageSnapshot>>
       setEnabled: (provider: ProviderId, enabled: boolean) => Promise<Settings>
       patchSettings: (patch: Partial<Settings>) => Promise<Settings>
-      autosize: (height: number) => void
+      autosize: (width: number, height: number) => void
       login: (provider: ProviderId) => Promise<boolean>
       logout: (provider: ProviderId) => Promise<boolean>
       quit: () => void
