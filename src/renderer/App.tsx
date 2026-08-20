@@ -122,7 +122,7 @@ export default function App() {
       <ProviderToggles settings={settings} onToggle={onToggle} compact={settings.compact} />
 
       {settings.compact ? (
-        <CompactRow ids={enabledIds} snaps={snaps} onOpen={setDetail} />
+        <CompactRow ids={enabledIds} snaps={snaps} weekly={settings.compactWeekly} onOpen={setDetail} />
       ) : (
         <div className="cards">
           {enabledIds.length === 0 && <div className="card-note">{t('state.noProviders')}</div>}

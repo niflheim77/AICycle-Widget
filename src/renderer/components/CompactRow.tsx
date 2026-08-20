@@ -4,9 +4,10 @@ import { t } from '../../shared/i18n'
 
 /** One provider's slot: its short window on top, the weekly one below when the
  *  provider reports one. Slots share the row width evenly and may shrink. */
-function Slot({ snap, onClick }: { snap: UsageSnapshot; onClick: () => void }) {
+function Slot({ snap, weekly, onClick }: { snap: UsageSnapshot; weekly: boolean; onClick: () => void }) {
   const meta = PROVIDER_META[snap.provider]
-  const windows = snap.available ? compactWindows(snap.windows) : []
+  const all = snap.available ? compactWindows(snap.windows) : []
+  const windows = weekly ? all : all.slice(0, 1)
 
   return (
     <div className="cslot" onClick={onClick} title={meta.name}>
@@ -40,10 +41,11 @@ function Slot({ snap, onClick }: { snap: UsageSnapshot; onClick: () => void }) {
 }
 
 export function CompactRow({
-  ids, snaps, onOpen
+  ids, snaps, weekly, onOpen
 }: {
   ids: ProviderId[]
   snaps: Record<string, UsageSnapshot>
+  weekly: boolean
   onOpen: (id: ProviderId) => void
 }) {
   if (ids.length === 0) return <div className="card-note">{t('state.noProviders')}</div>
@@ -52,7 +54,7 @@ export function CompactRow({
       {ids.map((id) => {
         const snap = snaps[id]
         if (!snap) return <div className="cslot" key={id}><div className="cslot-when muted">…</div></div>
-        return <Slot key={id} snap={snap} onClick={() => onOpen(id)} />
+        return <Slot key={id} snap={snap} weekly={weekly} onClick={() => onOpen(id)} />
       })}
     </div>
   )

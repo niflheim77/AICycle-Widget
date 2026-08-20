@@ -39,6 +39,7 @@ export interface Settings {
   alwaysOnTop: boolean
   launchAtStartup: boolean
   compact: boolean
+  compactWeekly: boolean
   claudeLimit5h: number
   claudeLimit7d: number
 }

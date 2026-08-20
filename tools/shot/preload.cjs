@@ -41,7 +41,7 @@ const snaps = {
 const settings = {
   enabledProviders: { claude: true, codex: true, grok: true, antigravity: true },
   refreshSeconds: 60, use24h: true, alwaysOnTop: true, launchAtStartup: false,
-  compact: false, claudeLimit5h: 0, claudeLimit7d: 0
+  compact: false, compactWeekly: true, claudeLimit5h: 0, claudeLimit7d: 0
 }
 
 window.aicycle = {

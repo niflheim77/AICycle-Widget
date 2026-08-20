@@ -9,6 +9,9 @@ export interface Settings {
   launchAtStartup: boolean
   /** One-row layout: icon toggles plus a single row of per-provider slots. */
   compact: boolean
+  /** Show the weekly window under the short one in compact mode. Off halves the
+   *  slot height for providers that report two windows. */
+  compactWeekly: boolean
   /** Local-mode token limits (0 = unset). Used to show 남은 % without login. */
   claudeLimit5h: number
   claudeLimit7d: number
@@ -21,6 +24,7 @@ const defaults: Settings = {
   alwaysOnTop: true,
   launchAtStartup: false,
   compact: false,
+  compactWeekly: true,
   claudeLimit5h: 0,
   claudeLimit7d: 0
 }
@@ -35,6 +39,7 @@ export function getSettings(): Settings {
     alwaysOnTop: store.get('alwaysOnTop'),
     launchAtStartup: store.get('launchAtStartup'),
     compact: store.get('compact'),
+    compactWeekly: store.get('compactWeekly'),
     claudeLimit5h: store.get('claudeLimit5h'),
     claudeLimit7d: store.get('claudeLimit7d')
   }
