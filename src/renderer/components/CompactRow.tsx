@@ -1,5 +1,5 @@
 import type { ProviderId, UsageSnapshot } from '../types'
-import { PROVIDER_META, arcColor, compactWindows, pct, fmtCountdown } from '../lib'
+import { PROVIDER_META, arcColor, compactLabel, compactWindows, pct, fmtCountdown } from '../lib'
 import { t } from '../../shared/i18n'
 
 /** One provider's slot: its short window on top, the weekly one below when the
@@ -25,7 +25,7 @@ function Slot({ snap, weekly, onClick }: { snap: UsageSnapshot; weekly: boolean;
           return (
             <div className="cwin" key={i}>
               <div className="cwin-top">
-                <span className="cwin-label muted">{w.label ?? w.window_type}</span>
+                <span className="cwin-label muted" title={w.label}>{compactLabel(w.label ?? w.window_type)}</span>
                 <span className="cwin-pct" style={{ color }}>{used}%</span>
               </div>
               <div className="cwin-track">

@@ -33,7 +33,8 @@ const snaps = {
   antigravity: {
     provider: 'antigravity', available: true, source: 'api', stale: false, fetched_at: at,
     windows: [
-      { window_type: 'daily', utilization: 0.27, label: 'Daily', resets_at: iso(9 * H + 40 * M) }
+      { window_type: 'daily', utilization: 0.27, label: 'Prompt', resets_at: iso(9 * H + 40 * M) },
+      { window_type: 'daily', utilization: 0.11, label: 'Flow', resets_at: iso(9 * H + 40 * M) }
     ]
   }
 }

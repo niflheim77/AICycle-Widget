@@ -60,6 +60,17 @@ export function fiveHour(windows: UsageWindow[]): UsageWindow | undefined {
   return windows.find((w) => w.window_type === 'five_hour')
 }
 
+/** Window label trimmed for a compact slot. Descriptive labels ('Prompt',
+ *  '5H·local') need more room than a slot has next to the percentage — 'Prompt'
+ *  plus '100%' is 67px against 58px of space — so they are cut to a two-letter
+ *  mark. Short labels ('5H', '1D') are already fine and pass through. The full
+ *  wording stays in the cards and the detail view. */
+export function compactLabel(label?: string): string {
+  if (!label) return ''
+  const base = label.split('·')[0]
+  return base.length <= 3 ? base : base.slice(0, 2).toUpperCase()
+}
+
 /** The one or two windows compact mode shows: the short window on top and the
  *  weekly one under it. Providers that report a single window (Grok, Gemini)
  *  yield just that one. seven_day_opus is left to the detail view. */

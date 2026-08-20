@@ -226,7 +226,9 @@ html, body, #root {
 
 .crow { display: flex; gap: 4px; padding: 2px 8px 8px; -webkit-app-region: no-drag; }
 .cslot {
-  width: 68px; flex: none; cursor: pointer;
+  /* Fits the widest content a slot can hold: a two-letter label plus '100%'
+     (47px) and the longest countdown (~37px), over 8px of padding. */
+  width: 56px; flex: none; cursor: pointer;
   background: var(--panel); border: 1px solid var(--border);
   border-radius: 6px; padding: 5px 4px;
   display: flex; flex-direction: column; gap: 5px;
