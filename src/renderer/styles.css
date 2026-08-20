@@ -29,9 +29,11 @@ html, body, #root {
 }
 
 .app {
-  /* Fixed by default — cards are designed for this width. Compact mode opts into
-     shrinking to whatever its row actually needs (see .app-compact). */
-  width: 300px;
+  /* Fixed by default — cards are designed for this width. 254px is what compact
+     mode measures with all four providers on (4×56 slots + 3×4 gaps + 16 padding
+     + 2 border), so the widget keeps one width across densities. Compact opts
+     into shrinking below it (see .app-compact). */
+  width: 254px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -251,5 +253,5 @@ html, body, #root {
 
 /* Compact mode sizes the window to its content: the row is as wide as the
    enabled slots, floored by the title bar's own width. */
-.app.app-compact { width: max-content; max-width: 300px; }
+.app.app-compact { width: max-content; max-width: 254px; }
 .app.app-compact .card-note { width: 120px; white-space: normal; }

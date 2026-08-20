@@ -13,7 +13,7 @@ let tray: Tray | null = null
 
 // Width is measured from content like height. Normal mode pins itself to 300 in
 // CSS; compact mode reports whatever its row needs, floored by the title bar.
-const WIDGET_W = 300
+const WIDGET_W = 254
 const WIDGET_MIN_W = 120
 const WIDGET_MAX_W = 420
 // Low enough for compact mode (one row, possibly a single provider). Normal mode
