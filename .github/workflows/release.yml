@@ -74,7 +74,7 @@ jobs:
             - `*-arm64.exe` — Windows on ARM
 
             ### 🍎 macOS
-            - `*-arm64.dmg` — Apple Silicon (M1/M2/M3/M4)
+            - `*-arm64.dmg` — Apple Silicon (M1–M6)
 
             ### 🐧 Linux
             - `*-x86_64.AppImage` — any distro, no install (`chmod +x`, then run) — **most users**
@@ -82,6 +82,35 @@ jobs:
             - `*-amd64.deb` / `*-arm64.deb` — Debian / Ubuntu
             - `*-x86_64.rpm` / `*-aarch64.rpm` — Fedora / RHEL
 
-            > Unsigned build: on first run, Windows SmartScreen → **More info → Run anyway**; macOS → **right-click → Open**.
+            ---
+
+            ## ⚠️ These builds are not code-signed
+
+            No Apple Developer or Windows signing certificate is used, so each OS
+            blocks the app on first launch. Nothing is wrong with the download —
+            you just have to tell the OS to trust it once.
+
+            ### macOS — "Apple could not verify… it may contain malware"
+
+            1. Open the `.dmg` and drag **AICycle Widget** into **Applications**.
+               Run it from `/Applications`, not from the mounted disk image.
+            2. Remove the quarantine flag macOS attached to the download:
+
+               ```sh
+               sudo xattr -dr com.apple.quarantine "/Applications/AICycle Widget.app"
+               ```
+
+               The quotes matter — the app name has a space in it. Enter your
+               login password when prompted (nothing is echoed as you type).
+            3. Launch it normally.
+
+            On macOS 15 and later the old **right-click → Open** trick no longer
+            clears this, which is why the command above is the reliable route. The
+            GUI equivalent, if you prefer it: launch once, let it be blocked, then
+            **System Settings → Privacy & Security** → scroll down → **Open Anyway**.
+
+            ### Windows — SmartScreen "Windows protected your PC"
+
+            Click **More info** → **Run anyway**.
 
             ---
