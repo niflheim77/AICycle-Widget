@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, powerMonitor } from 'electron'
 import path from 'path'
 import { getSettings, setEnabled, patchSettings } from './settings'
-import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots } from './poller'
+import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots, setWidgetWindow } from './poller'
 import { ProviderId } from './collectors/types'
 import { loginClaude, clearSession, closeFetchWindow } from './collectors/claude-web'
 import { closeCodexWindow } from './collectors/codex-web'
@@ -82,6 +82,8 @@ function createWindow() {
     }
   })
   if (s.alwaysOnTop) win.setAlwaysOnTop(true, 'floating')
+  setWidgetWindow(win)
+  win.on('closed', () => setWidgetWindow(null))
 
   if (process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])

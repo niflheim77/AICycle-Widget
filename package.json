@@ -8,8 +8,10 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "start": "electron-vite preview",
-    "package": "electron-vite build && electron-builder"
+    "package": "electron-vite build && electron-builder",
+    "test": "vitest run"
   },
   "dependencies": {
     "electron-store": "^8.2.0"
@@ -24,7 +26,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.5.4",
-    "vite": "^5.3.5"
+    "vite": "^5.3.5",
+    "vitest": "^3.2.4"
   },
   "build": {
     "appId": "com.aicycle.widget",

@@ -14,6 +14,9 @@ export function arcColor(u: number): string {
 
 export function fmtTokens(n?: number): string {
   if (n == null) return '—'
+  // Weekly totals run into the billions once cache reads are included; without
+  // this tier they render as a four-digit 'M'.
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + 'B'
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'k'
   return String(n)
@@ -75,11 +78,15 @@ export function compactLabel(label?: string): string {
  *  weekly one under it. Providers that report a single window (Grok, Gemini)
  *  yield just that one. seven_day_opus is left to the detail view. */
 export function compactWindows(windows: UsageWindow[]): UsageWindow[] {
-  const short = fiveHour(windows) ?? windows.find((w) => w.window_type === 'daily')
-  const weekly = windows.find((w) => w.window_type === 'seven_day')
-  const picked = [short ?? windows[0], weekly].filter((w): w is UsageWindow => !!w)
-  // De-dupe in case the same window matched both slots.
-  return picked.filter((w, i) => picked.indexOf(w) === i)
+  const short = fiveHour(windows) ?? windows[0]
+  if (!short) return []
+  // Prefer the weekly window underneath, but fall back to whatever other window
+  // the provider reports — Gemini has two 'daily' buckets (Prompt and Flow) and
+  // no weekly one, so anchoring the second slot to seven_day hid Flow entirely.
+  const second =
+    windows.find((w) => w !== short && w.window_type === 'seven_day') ??
+    windows.find((w) => w !== short)
+  return second ? [short, second] : [short]
 }
 
 export const PROVIDER_META: Record<string, { name: string; color: string }> = {

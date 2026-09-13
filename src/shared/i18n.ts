@@ -40,6 +40,7 @@ const messages: Record<Lang, Record<string, string>> = {
     'state.loading': '로딩…',
     'state.noData': '데이터 없음',
     'state.noProviders': '표시할 프로바이더가 없습니다. 위에서 켜주세요.',
+    'state.collectError': '수집 오류: {0}',
     // detail
     'detail.extraTitle': '추가 사용량 (Extra usage)',
     'detail.prepaid': '선불 잔액: {0}',
@@ -131,6 +132,7 @@ const messages: Record<Lang, Record<string, string>> = {
     'state.loading': 'Loading…',
     'state.noData': 'No data',
     'state.noProviders': 'No providers to show. Enable one above.',
+    'state.collectError': 'Collection failed: {0}',
     'detail.extraTitle': 'Extra usage',
     'detail.prepaid': 'Prepaid balance: {0}',
     'detail.overageOff': 'Overage disabled or no data',

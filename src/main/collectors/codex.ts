@@ -4,6 +4,7 @@ import path from 'path'
 import Store from 'electron-store'
 import { UsageSnapshot, UsageWindow, emptySnapshot } from './types'
 import { collectCodexWeb } from './codex-web'
+import { isSpuriousZero } from './usage-math'
 import { t } from '../../shared/i18n'
 
 const CODEX_DIR = path.join(os.homedir(), '.codex')
@@ -89,18 +90,6 @@ function localInfo(): string[] {
 }
 
 let zeroBlip = false
-
-/** True when a fresh all-zero reading contradicts a cached window that is still
- *  running (nonzero usage, reset time in the future). The usage endpoint blips
- *  to "0% / full window" occasionally; a genuine reset only zeroes a window
- *  after its scheduled reset time, and the 7d window never drops mid-week. */
-function isSpuriousZero(fresh: UsageWindow[], cached?: UsageSnapshot): boolean {
-  if (!cached || cached.source !== 'api') return false
-  if (!fresh.every((w) => w.utilization === 0)) return false
-  return cached.windows.some(
-    (w) => (w.utilization ?? 0) > 0 && !!w.resets_at && Date.parse(w.resets_at) > Date.now()
-  )
-}
 
 export async function collectCodex(): Promise<UsageSnapshot> {
   const cached = cacheStore.get('codex') as UsageSnapshot | undefined

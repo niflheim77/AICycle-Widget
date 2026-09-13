@@ -25,6 +25,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # esbuild strips types without checking them, so build alone would happily
+      # ship a type error. Check before building.
+      - run: npm run typecheck
+      - run: npm test
       - run: npm run build
       - name: Install rpm tooling (Linux)
         if: runner.os == 'Linux'

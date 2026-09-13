@@ -2,6 +2,7 @@ import { session as eSession, BrowserWindow, safeStorage } from 'electron'
 import Store from 'electron-store'
 import { UsageSnapshot, UsageWindow, ExtraUsage } from './types'
 import { t } from '../../shared/i18n'
+import { frac } from './usage-math'
 
 // Uses the same approach as claude-usage-widget: a real claude.ai browser
 // session (sessionKey cookie). The claude.ai web endpoints are what the web app
@@ -121,16 +122,6 @@ async function getOrgId(): Promise<string | null> {
   const def = chat.find((o: any) => o.raven_type === 'team') ?? chat[0] ?? data[0]
   cachedOrgId = def?.uuid ?? def?.id ?? null
   return cachedOrgId
-}
-
-function frac(v: unknown): number {
-  // claude.ai reports utilization as a percentage (0–100), so always divide by
-  // 100. The old `n > 1 ? n/100 : n` heuristic misread a real 1% (API value 1)
-  // as the fraction 1.0 = 100%, which flashed 100% around the reset boundary
-  // when usage passes through the 0–1% range.
-  const n = typeof v === 'number' ? v : Number(v)
-  if (!isFinite(n) || n <= 0) return 0
-  return Math.min(n / 100, 1)
 }
 
 function mapWindow(type: UsageWindow['window_type'], src: any, label: string): UsageWindow | null {
