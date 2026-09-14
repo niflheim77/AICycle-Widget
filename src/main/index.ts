@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, powerMonitor } from 'electron'
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, powerMonitor, screen } from 'electron'
 import path from 'path'
 import { getSettings, setEnabled, patchSettings } from './settings'
 import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots, setWidgetWindow } from './poller'
@@ -30,6 +30,20 @@ function loadIcon() {
   return img.isEmpty() ? nativeImage.createEmpty() : img
 }
 
+function getDockedPosition(width: number, height: number): { x: number; y: number } {
+  try {
+    const primary = screen.getPrimaryDisplay()
+    const workArea = primary.workArea
+    const marginX = 16
+    const marginY = 8
+    const x = Math.round(workArea.x + workArea.width - width - marginX)
+    const y = Math.round(workArea.y + workArea.height - height - marginY)
+    return { x, y }
+  } catch {
+    return { x: 100, y: 100 }
+  }
+}
+
 /** Register/unregister the app as a login item (Windows/macOS; no-op on most Linux).
  *  Only writes when the state actually changes: re-asserting on every launch makes
  *  unsigned/translocated macOS builds log "Unable to set login item: Operation not
@@ -43,8 +57,22 @@ function applyLaunchAtStartup(enabled: boolean) {
 
 function rebuildTrayMenu() {
   if (!tray) return
+  const s = getSettings()
   const menu = Menu.buildFromTemplate([
     { label: t('tray.settings'), click: () => openSettings() },
+    {
+      label: t('tray.dockToBottom'),
+      type: 'checkbox',
+      checked: s.dockToBottom,
+      click: (item) => {
+        patchSettings({ dockToBottom: item.checked })
+        if (item.checked && win && !win.isDestroyed()) {
+          const [w, h] = win.getSize()
+          const { x, y } = getDockedPosition(w, h)
+          win.setBounds({ x, y, width: w, height: h })
+        }
+      }
+    },
     { label: t('tray.refresh'), click: () => void pollOnce() },
     { type: 'separator' },
     { label: t('tray.quit'), click: () => app.quit() }
@@ -64,7 +92,13 @@ function openSettings() {
 
 function createWindow() {
   const s = getSettings()
+  const docked = getDockedPosition(WIDGET_W, WIDGET_MIN_H)
+  const posX = s.dockToBottom || !s.windowPosition ? docked.x : s.windowPosition.x
+  const posY = s.dockToBottom || !s.windowPosition ? docked.y : s.windowPosition.y
+
   win = new BrowserWindow({
+    x: posX,
+    y: posY,
     width: WIDGET_W,
     height: WIDGET_MIN_H,
     frame: false,
@@ -73,7 +107,7 @@ function createWindow() {
     transparent: true,
     icon: loadIcon(),
     alwaysOnTop: s.alwaysOnTop,
-    skipTaskbar: false,
+    skipTaskbar: true,
     fullscreenable: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -84,6 +118,12 @@ function createWindow() {
   if (s.alwaysOnTop) win.setAlwaysOnTop(true, 'floating')
   setWidgetWindow(win)
   win.on('closed', () => setWidgetWindow(null))
+
+  win.on('moved', () => {
+    if (!win || win.isDestroyed()) return
+    const [x, y] = win.getPosition()
+    patchSettings({ windowPosition: { x, y } })
+  })
 
   if (process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -97,7 +137,23 @@ function createTray() {
   tray = new Tray(img.isEmpty() ? nativeImage.createEmpty() : img)
   tray.setToolTip('AICycle Widget')
   rebuildTrayMenu()
-  tray.on('click', () => { if (win) { win.isVisible() ? win.hide() : win.show() } })
+  tray.on('click', () => {
+    if (!win || win.isDestroyed()) {
+      createWindow()
+      return
+    }
+    if (win.isVisible()) {
+      win.hide()
+    } else {
+      const s = getSettings()
+      if (s.dockToBottom) {
+        const [w, h] = win.getSize()
+        const { x, y } = getDockedPosition(w, h)
+        win.setBounds({ x, y, width: w, height: h })
+      }
+      win.show()
+    }
+  })
 }
 
 function registerIpc() {
@@ -118,6 +174,13 @@ function registerIpc() {
     if (Object.prototype.hasOwnProperty.call(patch, 'alwaysOnTop')) {
       win?.setAlwaysOnTop(s.alwaysOnTop, 'floating')
     }
+    if (Object.prototype.hasOwnProperty.call(patch, 'dockToBottom')) {
+      if (s.dockToBottom && win && !win.isDestroyed()) {
+        const [w, h] = win.getSize()
+        const { x, y } = getDockedPosition(w, h)
+        win.setBounds({ x, y, width: w, height: h })
+      }
+    }
     rebuildTrayMenu()
     restartPolling()
     return s
@@ -137,8 +200,14 @@ function registerIpc() {
     if (!win || win.isDestroyed()) return
     const h = Math.min(Math.max(Math.round(height), WIDGET_MIN_H), WIDGET_MAX_H)
     const w = Math.min(Math.max(Math.round(width), WIDGET_MIN_W), WIDGET_MAX_W)
-    const [curW, cur] = win.getSize()
-    if (Math.abs(cur - h) > 1 || Math.abs(curW - w) > 1) win.setContentSize(w, h)
+    const s = getSettings()
+    if (s.dockToBottom) {
+      const { x, y } = getDockedPosition(w, h)
+      win.setBounds({ x, y, width: w, height: h })
+    } else {
+      const [curW, cur] = win.getSize()
+      if (Math.abs(cur - h) > 1 || Math.abs(curW - w) > 1) win.setContentSize(w, h)
+    }
   })
   ipcMain.on('quit', () => app.quit())
 }

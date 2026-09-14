@@ -1,4 +1,4 @@
-export type ProviderId = 'claude' | 'codex' | 'grok' | 'antigravity'
+export type ProviderId = 'claude' | 'codex' | 'grok' | 'antigravity' | 'antigravity_2'
 
 export type Density = 'normal' | 'compact' | 'super'
 
@@ -40,6 +40,8 @@ export interface Settings {
   use24h: boolean
   alwaysOnTop: boolean
   launchAtStartup: boolean
+  dockToBottom: boolean
+  windowPosition: { x: number; y: number } | null
   density: Density
   claudeLimit5h: number
   claudeLimit7d: number

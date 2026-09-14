@@ -1,10 +1,13 @@
 // Tiny i18n shared by the main and renderer processes. Each process sets its
 // own `currentLang` (detected from the OS locale in main, passed to renderer).
 
-export type Lang = 'en' | 'ko'
+export type Lang = 'en' | 'ko' | 'pt'
 
 export function detectLang(locale: string | undefined): Lang {
-  return (locale ?? '').toLowerCase().startsWith('ko') ? 'ko' : 'en'
+  const l = (locale ?? '').toLowerCase()
+  if (l.startsWith('ko')) return 'ko'
+  if (l.startsWith('pt')) return 'pt'
+  return 'en'
 }
 
 const messages: Record<Lang, Record<string, string>> = {
@@ -49,6 +52,7 @@ const messages: Record<Lang, Record<string, string>> = {
     // tray
     'tray.refresh': '새로고침',
     'tray.settings': '설정',
+    'tray.dockToBottom': '하단 고정 (GNOME)',
     'tray.onTop': '항상 위',
     'tray.startup': 'Windows 시작 시 자동 실행',
     'tray.claudeLogout': 'Claude 로그아웃',
@@ -56,7 +60,8 @@ const messages: Record<Lang, Record<string, string>> = {
     // settings screen
     'settings.title': '설정',
     'settings.onTop': '항상 위에 표시',
-    'settings.startup': 'Windows 시작 시 자동 실행',
+    'settings.dockToBottom': '하단에 고정 (GNOME 확장 옆)',
+    'settings.startup': '시스템 시작 시 자동 실행',
     'settings.use24h': '24시간 형식',
     'settings.refresh': '새로고침 주기',
     'settings.refreshNow': '지금 새로고침',
@@ -139,12 +144,14 @@ const messages: Record<Lang, Record<string, string>> = {
     'detail.notProvided': 'This provider does not report extra usage',
     'tray.refresh': 'Refresh',
     'tray.settings': 'Settings',
+    'tray.dockToBottom': 'Dock to bottom (GNOME)',
     'tray.onTop': 'Always on top',
     'tray.startup': 'Launch at startup',
     'tray.claudeLogout': 'Log out of Claude',
     'tray.quit': 'Quit',
     'settings.title': 'Settings',
     'settings.onTop': 'Always on top',
+    'settings.dockToBottom': 'Dock to bottom (next to GNOME extensions)',
     'settings.startup': 'Launch at startup',
     'settings.use24h': '24-hour time',
     'settings.refresh': 'Refresh interval',
@@ -189,6 +196,93 @@ const messages: Record<Lang, Record<string, string>> = {
     'ag.featAutoRun': 'Auto-run commands',
     'ag.featCommit': 'Commit messages',
     'ag.featFastAutocomplete': 'Fast autocomplete'
+  },
+  pt: {
+    'w.5h': '5H',
+    'w.7d': '7D',
+    'w.7dOpus': '7D Opus',
+    'w.5hLocal': '5H·local',
+    'w.7dLocal': '7D·local',
+    'w.promptCredits': 'Prompt',
+    'w.flowCredits': 'Flow',
+    'bar.usedPct': '{0}%',
+    'bar.refreshAt': '{0} renova',
+    'bar.timeLeft': '{0} restante',
+    'bar.tokens': '{0} tok',
+    'cd.soon': 'agora',
+    'cd.dh': '{0}d {1}h',
+    'cd.hm': '{0}h {1}m',
+    'cd.m': '{0}m',
+    'cd.none': '—',
+    'btn.login': 'Entrar no {0} (única vez)',
+    'btn.loggingIn': 'Continue na janela de login…',
+    'btn.back': 'Voltar',
+    'density.toCompact': 'Modo compacto',
+    'density.toSuper': 'Modo super compacto',
+    'density.toNormal': 'Modo normal',
+    'compact.login': 'Entrar',
+    'compact.noData': 'Sem dados',
+    'state.loading': 'Carregando…',
+    'state.noData': 'Sem dados',
+    'state.noProviders': 'Nenhum provedor ativo. Ative um acima.',
+    'detail.extraTitle': 'Uso extra',
+    'detail.prepaid': 'Saldo pré-pago: {0}',
+    'detail.overageOff': 'Cobrança extra desativada ou sem dados',
+    'detail.notProvided': 'Este provedor não relata uso extra',
+    'tray.refresh': 'Atualizar',
+    'tray.settings': 'Configurações',
+    'tray.dockToBottom': 'Fixar no rodapé (Extensões GNOME)',
+    'tray.onTop': 'Sempre no topo',
+    'tray.startup': 'Iniciar com o sistema',
+    'tray.claudeLogout': 'Sair do Claude',
+    'tray.quit': 'Sair',
+    'settings.title': 'Configurações',
+    'settings.onTop': 'Sempre no topo',
+    'settings.dockToBottom': 'Fixar no rodapé (Extensões GNOME)',
+    'settings.startup': 'Iniciar com o sistema',
+    'settings.use24h': 'Formato 24 horas',
+    'settings.refresh': 'Intervalo de atualização',
+    'settings.refreshNow': 'Atualizar agora',
+    'settings.claudeLogout': 'Sair do Claude',
+    'settings.grokLogout': 'Sair do Grok',
+    'settings.quit': 'Sair',
+    'w.grok': 'Grok',
+    'grok.loginPrompt': 'Faça login no grok.com para ver o uso (%)',
+    'grok.sessionExpired': 'Sessão do grok.com expirou — faça login novamente',
+    'grok.model': 'Modelo: {0}',
+    'grok.queries': 'Consultas usadas: {0}',
+    'claude.loginPrompt': 'Faça login no claude.ai para ver o uso (%)',
+    'claude.sessionExpired': 'Sessão do claude.ai expirou — faça login novamente',
+    'codex.loginNeeded': 'Login do ChatGPT necessário (para % oficial)',
+    'codex.noData': 'Sem dados do Codex ou falha na leitura',
+    'codex.account': 'Conta: {0}',
+    'codex.creditsUnlimited': 'Créditos: ilimitado',
+    'codex.creditBalance': 'Saldo de créditos: {0}',
+    'codex.creditNone': ' (nenhum)',
+    'codex.resetCredits': 'Créditos de reset: {0}',
+    'codex.localTokens5h': 'Tokens locais (5h): {0}',
+    'codex.localTokens7d': 'Tokens locais (semanal): {0}',
+    'ag.turnOn': 'Abra o Antigravity para atualizar',
+    'ag.offline': 'Antigravity fechado — último valor',
+    'ag.noData': 'Sem dados de uso',
+    'ag.unlimited': 'Ilimitado',
+    'ag.user': 'Usuário: {0}',
+    'ag.plan': 'Plano: {0}',
+    'ag.promptLeft': 'Créditos Prompt usados: {0}',
+    'ag.flowLeft': 'Créditos Flow usados: {0}',
+    'ag.flexLimit': 'Limite de compra Flex: {0}',
+    'ag.maxChatTokens': 'Tokens máx. entrada chat: {0}',
+    'ag.premiumChat': 'Mensagens premium chat: {0}',
+    'ag.canBuy': 'Comprar mais créditos: {0}',
+    'ag.yes': 'sim',
+    'ag.no': 'não',
+    'ag.features': 'Recursos: {0}',
+    'ag.featWebSearch': 'Busca web',
+    'ag.featKnowledge': 'Base de conhecimento',
+    'ag.featPremium': 'Modelos premium',
+    'ag.featAutoRun': 'Execução automática de comandos',
+    'ag.featCommit': 'Mensagens de commit',
+    'ag.featFastAutocomplete': 'Autocompletar rápido'
   }
 }
 

@@ -23,10 +23,17 @@ const PATHS: Record<ProviderId, JSX.Element> = {
       <path d="M5 4.5l14 15M19 4.5L5 19.5" />
     </g>
   ),
-  // Gemini — four-point spark.
+  // Gemini 1 — four-point spark.
   antigravity: (
     <g strokeWidth="2" strokeLinejoin="round">
       <path d="M12 3.2c0 4.85 3.95 8.8 8.8 8.8-4.85 0-8.8 3.95-8.8 8.8 0-4.85-3.95-8.8-8.8-8.8 4.85 0 8.8-3.95 8.8-8.8z" />
+    </g>
+  ),
+  // Gemini 2 — four-point spark with inner core mark.
+  antigravity_2: (
+    <g strokeWidth="2" strokeLinejoin="round">
+      <path d="M12 3.2c0 4.85 3.95 8.8 8.8 8.8-4.85 0-8.8 3.95-8.8 8.8 0-4.85-3.95-8.8-8.8-8.8 4.85 0 8.8-3.95 8.8-8.8z" />
+      <circle cx="12" cy="12" r="1.75" fill="currentColor" stroke="none" />
     </g>
   )
 }

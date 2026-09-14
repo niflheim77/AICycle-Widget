@@ -2,7 +2,7 @@ import type { ProviderId, Settings } from '../types'
 import { PROVIDER_META } from '../lib'
 import { ProviderIcon } from './ProviderIcon'
 
-const IDS: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
+const IDS: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity', 'antigravity_2']
 
 /** Requirement #1: per-provider on/off so the user only sees what they want. */
 export function ProviderToggles({

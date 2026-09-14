@@ -7,7 +7,7 @@ import { SettingsView } from './components/SettingsView'
 import { CompactRow } from './components/CompactRow'
 import { t, setLang } from '../shared/i18n'
 
-const ORDER: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
+const ORDER: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity', 'antigravity_2']
 
 // The title-bar button cycles the three layouts. The icon is a box with one row
 // per step of compaction, so it reads as the density you are currently in; the
