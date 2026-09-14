@@ -93,6 +93,7 @@ export const PROVIDER_META: Record<string, { name: string; color: string }> = {
   claude: { name: 'Claude', color: '#d97757' },
   codex: { name: 'Codex', color: '#10a37f' },
   grok: { name: 'Grok', color: '#c9ccd4' },
-  // Sourced from the Antigravity IDE, shown as Gemini — the models it reports on.
-  antigravity: { name: 'Gemini', color: '#4285f4' }
+  // Sourced from Antigravity IDE instances, shown as Gemini 1 & Gemini 2
+  antigravity: { name: 'Gemini 1', color: '#4285f4' },
+  antigravity_2: { name: 'Gemini 2', color: '#7c4dff' }
 }

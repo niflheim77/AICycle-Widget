@@ -11,7 +11,8 @@ const COLLECTORS: Record<ProviderId, () => Promise<UsageSnapshot>> = {
   claude: collectClaude,
   codex: collectCodex,
   grok: collectGrok,
-  antigravity: collectAntigravity
+  antigravity: () => collectAntigravity('antigravity'),
+  antigravity_2: () => collectAntigravity('antigravity_2')
 }
 
 let timer: NodeJS.Timeout | null = null

@@ -31,6 +31,10 @@ export function SettingsView({
         <Toggle on={settings.alwaysOnTop} onClick={() => onPatch({ alwaysOnTop: !settings.alwaysOnTop })} />
       </div>
       <div className="set-row">
+        <span>{t('settings.dockToBottom')}</span>
+        <Toggle on={settings.dockToBottom} onClick={() => onPatch({ dockToBottom: !settings.dockToBottom })} />
+      </div>
+      <div className="set-row">
         <span>{t('settings.startup')}</span>
         <Toggle on={settings.launchAtStartup} onClick={() => onPatch({ launchAtStartup: !settings.launchAtStartup })} />
       </div>

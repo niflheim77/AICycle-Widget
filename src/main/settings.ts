@@ -9,6 +9,8 @@ export interface Settings {
   use24h: boolean
   alwaysOnTop: boolean
   launchAtStartup: boolean
+  dockToBottom: boolean
+  windowPosition: { x: number; y: number } | null
   /** How tightly the widget packs, cycled from the title bar:
    *  normal  — stacked provider cards
    *  compact — one row of slots, short window over weekly
@@ -20,11 +22,13 @@ export interface Settings {
 }
 
 const defaults: Settings = {
-  enabledProviders: { claude: true, codex: true, grok: false, antigravity: false },
+  enabledProviders: { claude: true, codex: true, grok: false, antigravity: true, antigravity_2: true },
   refreshSeconds: 60,
   use24h: true,
   alwaysOnTop: true,
   launchAtStartup: false,
+  dockToBottom: true,
+  windowPosition: null,
   density: 'normal',
   claudeLimit5h: 0,
   claudeLimit7d: 0
@@ -39,6 +43,8 @@ export function getSettings(): Settings {
     use24h: store.get('use24h'),
     alwaysOnTop: store.get('alwaysOnTop'),
     launchAtStartup: store.get('launchAtStartup'),
+    dockToBottom: store.get('dockToBottom') ?? true,
+    windowPosition: store.get('windowPosition') ?? null,
     density: store.get('density'),
     claudeLimit5h: store.get('claudeLimit5h'),
     claudeLimit7d: store.get('claudeLimit7d')
