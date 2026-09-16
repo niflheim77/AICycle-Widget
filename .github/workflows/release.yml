@@ -94,7 +94,15 @@ jobs:
             blocks the app on first launch. Nothing is wrong with the download —
             you just have to tell the OS to trust it once.
 
-            ### macOS — "Apple could not verify… it may contain malware"
+            ### macOS
+
+            You will hit one of two messages:
+
+            - **"…is damaged and can't be opened. You should move it to the Trash."**
+            - **"Apple could not verify… it may contain malware"**
+
+            Neither means the download is corrupt. Both are Gatekeeper refusing an
+            app that carries no Apple signature. Same fix:
 
             1. Open the `.dmg` and drag **AICycle Widget** into **Applications**.
                Run it from `/Applications`, not from the mounted disk image.
@@ -104,14 +112,22 @@ jobs:
                sudo xattr -dr com.apple.quarantine "/Applications/AICycle Widget.app"
                ```
 
-               The quotes matter — the app name has a space in it. Enter your
-               login password when prompted (nothing is echoed as you type).
+               The quotes matter — the app name has a space in it. Enter your login
+               password when prompted (nothing is echoed as you type).
             3. Launch it normally.
 
+            If it still says **damaged** after step 2, give the bundle a local
+            signature and try again:
+
+            ```sh
+            sudo codesign --force --deep --sign - "/Applications/AICycle Widget.app"
+            ```
+
             On macOS 15 and later the old **right-click → Open** trick no longer
-            clears this, which is why the command above is the reliable route. The
-            GUI equivalent, if you prefer it: launch once, let it be blocked, then
-            **System Settings → Privacy & Security** → scroll down → **Open Anyway**.
+            clears this, which is why the commands above are the reliable route. For
+            the "could not verify" message there is also a GUI path: launch once, let
+            it be blocked, then **System Settings → Privacy & Security** → scroll
+            down → **Open Anyway**. That option does *not* appear for "damaged".
 
             ### Windows — SmartScreen "Windows protected your PC"
 
