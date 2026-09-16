@@ -44,10 +44,11 @@ export default function App() {
     })
     window.aicycle.getSnapshots().then(setSnaps)
     const off = window.aicycle.onSnapshots(setSnaps)
+    const offPush = window.aicycle.onSettings(setSettings)
     const offSettings = window.aicycle.onOpenSettings(() => { setDetail(null); setShowSettings(true) })
     // Re-render every 30s so countdowns stay fresh between polls.
     const timer = setInterval(() => force((n) => n + 1), 30_000)
-    return () => { off(); offSettings(); clearInterval(timer) }
+    return () => { off(); offPush(); offSettings(); clearInterval(timer) }
   }, [])
 
   const onPatch = async (patch: Partial<Settings>) => setSettings(await window.aicycle.patchSettings(patch))
@@ -138,7 +139,9 @@ export default function App() {
         </div>
       </div>
 
-      <ProviderToggles settings={settings} onToggle={onToggle} compact={dense} />
+      {settings.showToggles && (
+        <ProviderToggles settings={settings} onToggle={onToggle} compact={dense} />
+      )}
 
       {dense ? (
         <CompactRow ids={enabledIds} snaps={snaps} weekly={settings.density === 'compact'} onOpen={setDetail} />

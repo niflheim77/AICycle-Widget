@@ -48,6 +48,7 @@ const messages: Record<Lang, Record<string, string>> = {
     'detail.notProvided': '이 프로바이더는 추가 사용량 정보를 제공하지 않습니다',
     // tray
     'tray.refresh': '새로고침',
+    'menu.providerBar': '프로바이더 바',
     'tray.settings': '설정',
     'tray.onTop': '항상 위',
     'tray.startup': 'Windows 시작 시 자동 실행',
@@ -138,6 +139,7 @@ const messages: Record<Lang, Record<string, string>> = {
     'detail.overageOff': 'Overage disabled or no data',
     'detail.notProvided': 'This provider does not report extra usage',
     'tray.refresh': 'Refresh',
+    'menu.providerBar': 'Provider bar',
     'tray.settings': 'Settings',
     'tray.onTop': 'Always on top',
     'tray.startup': 'Launch at startup',

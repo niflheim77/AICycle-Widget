@@ -14,6 +14,9 @@ export interface Settings {
    *  compact — one row of slots, short window over weekly
    *  super   — the same row without the weekly window */
   density: Density
+  /** Show the provider on/off bar. Hidden by default once a user has settled on
+   *  which providers they watch; toggled from the widget's context menu. */
+  showToggles: boolean
   /** Local-mode token limits (0 = unset). Used to show 남은 % without login. */
   claudeLimit5h: number
   claudeLimit7d: number
@@ -26,6 +29,7 @@ const defaults: Settings = {
   alwaysOnTop: true,
   launchAtStartup: false,
   density: 'normal',
+  showToggles: true,
   claudeLimit5h: 0,
   claudeLimit7d: 0
 }
@@ -40,6 +44,7 @@ export function getSettings(): Settings {
     alwaysOnTop: store.get('alwaysOnTop'),
     launchAtStartup: store.get('launchAtStartup'),
     density: store.get('density'),
+    showToggles: store.get('showToggles'),
     claudeLimit5h: store.get('claudeLimit5h'),
     claudeLimit7d: store.get('claudeLimit7d')
   }

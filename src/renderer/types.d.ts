@@ -41,6 +41,7 @@ export interface Settings {
   alwaysOnTop: boolean
   launchAtStartup: boolean
   density: Density
+  showToggles: boolean
   claudeLimit5h: number
   claudeLimit7d: number
 }
@@ -59,6 +60,7 @@ declare global {
       logout: (provider: ProviderId) => Promise<boolean>
       quit: () => void
       onSnapshots: (cb: (data: Record<string, UsageSnapshot>) => void) => () => void
+      onSettings: (cb: (s: Settings) => void) => () => void
       onOpenSettings: (cb: () => void) => () => void
     }
   }

@@ -20,6 +20,7 @@ Inspired by [OpenTokenMonitor](https://github.com/Hitheshkaranth/OpenTokenMonito
 - 🟢 **Usage at a glance** — each window (5H / 7D / credits) shows the **used %** with a matching bar.
 - ⏱️ **Time-to-refresh first** — how much time is left is shown prominently, with the exact reset clock alongside.
 - 🔍 **Detail view** — click any card for plan tier, extra usage / overage ($), credits, and account details.
+- 🖱️ **Right-click menu** — hide the provider on/off bar once you have settled on what you watch, and get it back the same way. Settings, refresh and quit are there too.
 - 🗜️ **Three densities** — the first title-bar button cycles normal → compact → super compact. Compact swaps the stacked cards for one icon per provider and a single row of slots; super compact drops the weekly row on top of that. With all four providers on that is 500px tall, then 159, then 116.
 - 🌐 **Auto language** — UI follows your OS language (English / Korean); compact labels stay short (`5H`, `7D`).
 - 🪶 **Compact & always-on-top** — auto-sizes to its content; lives in the corner without taking over your screen.

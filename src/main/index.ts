@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, powerMonitor } from 'electron'
 import path from 'path'
-import { getSettings, setEnabled, patchSettings } from './settings'
+import { getSettings, setEnabled, patchSettings, Settings } from './settings'
 import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots, setWidgetWindow } from './poller'
 import { ProviderId } from './collectors/types'
 import { loginClaude, clearSession, closeFetchWindow } from './collectors/claude-web'
@@ -39,6 +39,36 @@ function applyLaunchAtStartup(enabled: boolean) {
     if (app.getLoginItemSettings().openAtLogin === enabled) return
     app.setLoginItemSettings({ openAtLogin: enabled, args: [] })
   } catch { /* unsupported on this platform */ }
+}
+
+/** Right-click menu on the widget itself. The provider bar is the thing people
+ *  set once and then stop touching, so it lives here rather than taking up a
+ *  row — and here is also how you get it back once hidden. */
+function popupWidgetMenu() {
+  if (!win || win.isDestroyed()) return
+  const s = getSettings()
+  Menu.buildFromTemplate([
+    {
+      label: t('menu.providerBar'),
+      type: 'checkbox',
+      checked: s.showToggles,
+      click: () => applySettings({ showToggles: !s.showToggles })
+    },
+    { type: 'separator' },
+    { label: t('tray.settings'), click: () => openSettings() },
+    { label: t('tray.refresh'), click: () => void pollOnce() },
+    { type: 'separator' },
+    { label: t('tray.quit'), click: () => app.quit() }
+  ]).popup({ window: win })
+}
+
+/** Persist a settings change made outside the renderer and push it back, so the
+ *  window re-renders instead of drifting from what is stored. */
+function applySettings(patch: Partial<Settings>): void {
+  const s = patchSettings(patch)
+  if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
+    win.webContents.send('settings', s)
+  }
 }
 
 function rebuildTrayMenu() {
@@ -84,6 +114,7 @@ function createWindow() {
   if (s.alwaysOnTop) win.setAlwaysOnTop(true, 'floating')
   setWidgetWindow(win)
   win.on('closed', () => setWidgetWindow(null))
+  win.webContents.on('context-menu', () => popupWidgetMenu())
 
   if (process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
