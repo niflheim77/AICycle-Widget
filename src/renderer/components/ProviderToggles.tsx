@@ -1,8 +1,9 @@
 import type { ProviderId, Settings } from '../types'
 import { PROVIDER_META } from '../lib'
 import { ProviderIcon } from './ProviderIcon'
+import { PROVIDER_IDS } from '../../shared/providers'
 
-const IDS: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
+
 
 /** Requirement #1: per-provider on/off so the user only sees what they want. */
 export function ProviderToggles({
@@ -16,7 +17,7 @@ export function ProviderToggles({
 }) {
   return (
     <div className={compact ? 'toggles toggles-compact' : 'toggles'}>
-      {IDS.map((id) => {
+      {PROVIDER_IDS.map((id) => {
         const on = settings.enabledProviders[id]
         const meta = PROVIDER_META[id]
         return (

@@ -6,8 +6,9 @@ import { DetailView } from './components/DetailView'
 import { SettingsView } from './components/SettingsView'
 import { CompactRow } from './components/CompactRow'
 import { t, setLang } from '../shared/i18n'
+import { PROVIDER_IDS } from '../shared/providers'
 
-const ORDER: ProviderId[] = ['claude', 'codex', 'grok', 'antigravity']
+
 
 // The title-bar button cycles the three layouts. The icon is a box with one row
 // per step of compaction, so it reads as the density you are currently in; the
@@ -63,7 +64,7 @@ export default function App() {
   if (!settings) return <div className="app loading" ref={rootRef}>{t('state.loading')}</div>
 
   const use24h = settings.use24h
-  const enabledIds = ORDER.filter((id) => settings.enabledProviders[id])
+  const enabledIds = PROVIDER_IDS.filter((id) => settings.enabledProviders[id])
   // Both dense layouts share the one-row body; only 'compact' keeps the weekly row.
   const dense = settings.density !== 'normal'
 

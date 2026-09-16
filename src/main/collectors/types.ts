@@ -1,7 +1,5 @@
-// 'antigravity' is the data source (the Antigravity IDE's language server); it is
-// surfaced in the UI as "Gemini", which is the model family it reports on. The id
-// is kept as-is so saved settings and caches survive.
-export type ProviderId = 'claude' | 'codex' | 'grok' | 'antigravity'
+export type { ProviderId } from '../../shared/providers'
+import type { ProviderId } from '../../shared/providers'
 
 export type WindowType = 'five_hour' | 'seven_day' | 'seven_day_opus' | 'daily'
 

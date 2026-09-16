@@ -3,6 +3,7 @@ import path from 'path'
 import { getSettings, setEnabled, patchSettings, Settings } from './settings'
 import { startPolling, stopPolling, restartPolling, pollOnce, getLastSnapshots, setWidgetWindow } from './poller'
 import { ProviderId } from './collectors/types'
+import { PROVIDER_IDS, PROVIDER_NAMES } from '../shared/providers'
 import { loginClaude, clearSession, closeFetchWindow } from './collectors/claude-web'
 import { closeCodexWindow } from './collectors/codex-web'
 import { loginGrok, clearGrokSession, closeGrokWindow } from './collectors/grok-web'
@@ -48,6 +49,13 @@ function popupWidgetMenu() {
   if (!win || win.isDestroyed()) return
   const s = getSettings()
   Menu.buildFromTemplate([
+    ...PROVIDER_IDS.map((id) => ({
+      label: PROVIDER_NAMES[id],
+      type: 'checkbox' as const,
+      checked: s.enabledProviders[id],
+      click: () => toggleProvider(id, !s.enabledProviders[id])
+    })),
+    { type: 'separator' },
     {
       label: t('menu.providerBar'),
       type: 'checkbox',
@@ -65,7 +73,18 @@ function popupWidgetMenu() {
 /** Persist a settings change made outside the renderer and push it back, so the
  *  window re-renders instead of drifting from what is stored. */
 function applySettings(patch: Partial<Settings>): void {
-  const s = patchSettings(patch)
+  pushSettings(patchSettings(patch))
+}
+
+/** Same, for a provider switch — which also has to restart polling so the
+ *  provider starts or stops being collected, exactly as the in-app toggle does. */
+function toggleProvider(id: ProviderId, enabled: boolean): void {
+  const s = setEnabled(id, enabled)
+  restartPolling()
+  pushSettings(s)
+}
+
+function pushSettings(s: Settings): void {
   if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
     win.webContents.send('settings', s)
   }

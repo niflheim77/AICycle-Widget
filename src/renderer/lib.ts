@@ -1,5 +1,6 @@
 import type { UsageWindow } from './types'
 import { t, localeTag } from '../shared/i18n'
+import { PROVIDER_IDS, PROVIDER_NAMES } from '../shared/providers'
 
 export function pct(u: number): number {
   return Math.round(Math.min(Math.max(u, 0), 1) * 100)
@@ -89,10 +90,13 @@ export function compactWindows(windows: UsageWindow[]): UsageWindow[] {
   return second ? [short, second] : [short]
 }
 
-export const PROVIDER_META: Record<string, { name: string; color: string }> = {
-  claude: { name: 'Claude', color: '#d97757' },
-  codex: { name: 'Codex', color: '#10a37f' },
-  grok: { name: 'Grok', color: '#c9ccd4' },
-  // Sourced from the Antigravity IDE, shown as Gemini — the models it reports on.
-  antigravity: { name: 'Gemini', color: '#4285f4' }
+const PROVIDER_COLORS: Record<string, string> = {
+  claude: '#d97757',
+  codex: '#10a37f',
+  grok: '#c9ccd4',
+  antigravity: '#4285f4'
 }
+
+export const PROVIDER_META: Record<string, { name: string; color: string }> = Object.fromEntries(
+  PROVIDER_IDS.map((id) => [id, { name: PROVIDER_NAMES[id], color: PROVIDER_COLORS[id] }])
+)
