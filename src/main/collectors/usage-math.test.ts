@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frac, isSpuriousZero, parseResetTickets } from './usage-math'
+import { frac, isSpuriousZero, parseResetTickets, parseCloudCredits, fmtDollars } from './usage-math'
 import { UsageSnapshot, UsageWindow } from './types'
 
 describe('frac', () => {
@@ -148,5 +148,63 @@ describe('parseResetTickets', () => {
   it('skips malformed grants instead of throwing', () => {
     const got = parseResetTickets({ grants: [null, 'x', { resets_left: 'a' }, grant({})] }, NOW)
     expect(got).toMatchObject({ left: 1, total: 1 })
+  })
+})
+
+describe('parseCloudCredits', () => {
+  const NOW = Date.parse('2026-09-29T00:00:00Z')
+
+  // What /usage returned for the cloud session credits bucket.
+  const real = {
+    utilization: 0, resets_at: '2026-11-05T07:59:00+00:00',
+    limit_dollars: 100, used_dollars: 0, remaining_dollars: 100, locked_reason: null
+  }
+
+  it('reads the real bucket', () => {
+    expect(parseCloudCredits(real, NOW)).toEqual({
+      limit: 100, remaining: 100, expiresAt: '2026-11-05T07:59:00.000Z'
+    })
+  })
+
+  it('reports what is left after some is spent', () => {
+    const got = parseCloudCredits({ ...real, used_dollars: 37.5, remaining_dollars: 62.5 }, NOW)
+    expect(got).toMatchObject({ limit: 100, remaining: 62.5 })
+  })
+
+  it('works out the balance from used_dollars when remaining is missing', () => {
+    const { remaining_dollars, ...noRemaining } = { ...real, used_dollars: 40 }
+    expect(parseCloudCredits(noRemaining, NOW)).toMatchObject({ limit: 100, remaining: 60 })
+  })
+
+  it('keeps a spent bucket at zero rather than going negative', () => {
+    expect(parseCloudCredits({ ...real, used_dollars: 100, remaining_dollars: 0 }, NOW)?.remaining).toBe(0)
+    expect(parseCloudCredits({ ...real, remaining_dollars: -3 }, NOW)?.remaining).toBe(0)
+  })
+
+  it('drops a bucket that has already expired', () => {
+    expect(parseCloudCredits({ ...real, resets_at: '2026-09-01T00:00:00Z' }, NOW)).toBeNull()
+  })
+
+  // Several sibling buckets come back with every field null when unused.
+  it('ignores an empty bucket', () => {
+    const empty = { utilization: 0, resets_at: null, limit_dollars: null,
+      used_dollars: null, remaining_dollars: null, locked_reason: null }
+    expect(parseCloudCredits(empty, NOW)).toBeNull()
+    expect(parseCloudCredits(null, NOW)).toBeNull()
+    expect(parseCloudCredits(undefined, NOW)).toBeNull()
+    expect(parseCloudCredits('x', NOW)).toBeNull()
+  })
+
+  it('ignores a bucket with no positive limit', () => {
+    expect(parseCloudCredits({ ...real, limit_dollars: 0 }, NOW)).toBeNull()
+  })
+})
+
+describe('fmtDollars', () => {
+  it('drops the cents on whole amounts and keeps two places otherwise', () => {
+    expect(fmtDollars(100)).toBe('$100')
+    expect(fmtDollars(0)).toBe('$0')
+    expect(fmtDollars(62.5)).toBe('$62.50')
+    expect(fmtDollars(0.07)).toBe('$0.07')
   })
 })

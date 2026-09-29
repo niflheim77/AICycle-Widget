@@ -2,7 +2,7 @@ import { session as eSession, BrowserWindow, safeStorage } from 'electron'
 import Store from 'electron-store'
 import { UsageSnapshot, UsageWindow, ExtraUsage } from './types'
 import { t } from '../../shared/i18n'
-import { frac, parseResetTickets, ResetTickets } from './usage-math'
+import { frac, parseResetTickets, ResetTickets, parseCloudCredits, CloudCredits, fmtDollars } from './usage-math'
 
 // Uses the same approach as claude-usage-widget: a real claude.ai browser
 // session (sessionKey cookie). The claude.ai web endpoints are what the web app
@@ -151,15 +151,32 @@ function mapExtra(overage: any, prepaid: any): ExtraUsage | undefined {
   }
 }
 
-/** e.g. "Limit resets: 1 of 1 left · expires 10/23" — same slot Codex uses for its
- *  reset credits. Expiry is omitted once none are left. */
-function formatResetTickets(rt: ResetTickets): string {
-  const base = t('claude.resetTickets', rt.left, rt.total)
-  if (!rt.expiresAt || rt.left <= 0) return base
-  const d = new Date(rt.expiresAt)
-  // month/day only, in local time — the same short form the reset clocks use.
-  const when = `${d.getMonth() + 1}/${d.getDate()}`
-  return `${base} · ${t('claude.resetExpires', when)}`
+/** The detail box is ~210px wide, and the amount, the label and the date do not
+ *  reliably fit one line together ("Cloud session credits: $62.50 of $100 left ·
+ *  expires 11/5" is ~260px in English and as wide in Korean), so wrapping decided
+ *  where the date landed. The expiry gets its own indented line instead. An em
+ *  space is used for the indent because HTML collapses ordinary leading spaces. */
+const INDENT = ' '
+
+/** e.g. ["Limit resets: 1 of 1 left", "  expires 10/23"] — the same kind of line
+ *  Codex shows for its reset credits. The expiry is left out once none remain. */
+function formatResetTickets(rt: ResetTickets): string[] {
+  const lines = [t('claude.resetTickets', rt.left, rt.total)]
+  if (rt.expiresAt && rt.left > 0) lines.push(INDENT + t('claude.resetExpires', shortDate(rt.expiresAt)))
+  return lines
+}
+
+/** e.g. ["Cloud session credits: $100 of $100 left", "  expires 11/5"]. */
+function formatCloudCredits(c: CloudCredits): string[] {
+  const lines = [t('claude.cloudCredits', fmtDollars(c.limit), fmtDollars(c.remaining))]
+  if (c.expiresAt && c.remaining > 0) lines.push(INDENT + t('claude.resetExpires', shortDate(c.expiresAt)))
+  return lines
+}
+
+/** month/day only, in local time — the same short form the reset clocks use. */
+function shortDate(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
 /** Returns a snapshot from claude.ai, or null if not logged in / session invalid. */
@@ -194,14 +211,22 @@ export async function collectClaudeWeb(includeExtra: boolean): Promise<UsageSnap
       extra = mapExtra(overage, prepaid)
     }
 
+    // Both live in the /usage response under internal, obfuscated names — the reset
+    // tickets under `cedar_ember` (only present with the flag above) and the cloud
+    // session credits under `iguana_necktie`. If either is renamed its line simply
+    // stops appearing.
+    const info: string[] = []
     const tickets = parseResetTickets(usage.cedar_ember)
+    if (tickets) info.push(...formatResetTickets(tickets))
+    const cloud = parseCloudCredits(usage.iguana_necktie)
+    if (cloud) info.push(...formatCloudCredits(cloud))
 
     return {
       provider: 'claude',
       available: true,
       windows,
       extraUsage: extra,
-      extraInfo: tickets ? [formatResetTickets(tickets)] : undefined,
+      extraInfo: info.length ? info : undefined,
       plan: usage.plan?.name ?? usage.subscription,
       fetched_at: new Date().toISOString(),
       stale: false,

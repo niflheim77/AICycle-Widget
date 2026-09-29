@@ -84,3 +84,45 @@ export function parseResetTickets(v: unknown, now = Date.now()): ResetTickets | 
     usableNow
   }
 }
+
+/** The promotional "cloud session credits" grant shown on claude.ai under
+ *  Settings → Usage: a dollar allowance for cloud sessions that expires. */
+export interface CloudCredits {
+  limit: number
+  remaining: number
+  /** When the unused balance expires. */
+  expiresAt?: string
+}
+
+/** Read the dollar bucket claude.ai returns in `/usage` for cloud session credits.
+ *
+ *  Shape seen: { utilization, resets_at, limit_dollars, used_dollars,
+ *                remaining_dollars, locked_reason } — `resets_at` is the expiry.
+ *  Returns null when there is no bucket (every field null), when it has no
+ *  positive limit, or when it has already expired. */
+export function parseCloudCredits(v: unknown, now = Date.now()): CloudCredits | null {
+  if (!v || typeof v !== 'object') return null
+  const o = v as Record<string, unknown>
+
+  const limit = typeof o.limit_dollars === 'number' ? o.limit_dollars : NaN
+  if (!isFinite(limit) || limit <= 0) return null
+
+  const left = typeof o.remaining_dollars === 'number'
+    ? o.remaining_dollars
+    : typeof o.used_dollars === 'number' ? limit - o.used_dollars : NaN
+  if (!isFinite(left)) return null
+
+  const ends = typeof o.resets_at === 'string' ? Date.parse(o.resets_at) : NaN
+  if (isFinite(ends) && ends <= now) return null // expired
+
+  return {
+    limit,
+    remaining: Math.min(Math.max(left, 0), limit),
+    expiresAt: isFinite(ends) ? new Date(ends).toISOString() : undefined
+  }
+}
+
+/** "$100" for whole dollars, "$12.50" otherwise. */
+export function fmtDollars(n: number): string {
+  return Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`
+}

@@ -15,7 +15,7 @@ const snaps = {
       { window_type: 'seven_day', utilization: 0.82, label: '7D', resets_at: iso(4 * D + 3 * H) }
     ],
     extraUsage: { used: 20.08, limit: 20.0, balance: 68.8, currency: 'USD', enabled: true },
-    extraInfo: ['Limit resets: 1 of 1 left · expires 10/23']
+    extraInfo: ['Limit resets: 1 of 1 left', ' expires 10/23', 'Cloud session credits: $100 of $100 left', ' expires 11/5']
   },
   codex: {
     provider: 'codex', available: true, source: 'api', stale: false, plan: 'Plus', fetched_at: at,
