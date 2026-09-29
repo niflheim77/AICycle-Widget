@@ -28,3 +28,59 @@ export function isSpuriousZero(fresh: UsageWindow[], cached?: UsageSnapshot, now
     (w) => (w.utilization ?? 0) > 0 && !!w.resets_at && Date.parse(w.resets_at) > now
   )
 }
+
+/** Limit-reset tickets Anthropic hands out to eligible plans (Settings → Usage →
+ *  Resets on claude.ai). */
+export interface ResetTickets {
+  /** Tickets still unused across all unexpired grants. */
+  left: number
+  total: number
+  /** Earliest expiry among grants that still have a ticket left. */
+  expiresAt?: string
+  /** A ticket can be redeemed right now (not paused, and the grant allows it). */
+  usableNow: boolean
+}
+
+/** Read the `cedar_ember` object that `/usage?cedar_ember=1` returns.
+ *
+ *  Shape seen on a Pro account:
+ *    { eligible, grants: [{ resets_total, resets_left, ends_at, usable_now,
+ *                            paused, ... }], next_grant_id, cooldown_until, ... }
+ *  Returns null when there is nothing worth showing, so callers can just skip
+ *  the line rather than print "0 of 0". Grants past their end date are ignored
+ *  even if the server still lists them. */
+export function parseResetTickets(v: unknown, now = Date.now()): ResetTickets | null {
+  const grants = (v as { grants?: unknown } | null | undefined)?.grants
+  if (!Array.isArray(grants)) return null
+
+  let left = 0
+  let total = 0
+  let usableNow = false
+  let expires: number | undefined
+
+  for (const g of grants) {
+    if (!g || typeof g !== 'object') continue
+    const o = g as Record<string, unknown>
+    const grantLeft = Number(o.resets_left)
+    const grantTotal = Number(o.resets_total)
+    if (!isFinite(grantLeft) || !isFinite(grantTotal) || grantTotal <= 0) continue
+
+    const ends = typeof o.ends_at === 'string' ? Date.parse(o.ends_at) : NaN
+    if (isFinite(ends) && ends <= now) continue // already expired
+
+    left += Math.max(grantLeft, 0)
+    total += grantTotal
+    if (grantLeft > 0) {
+      if (o.usable_now === true && o.paused !== true) usableNow = true
+      if (isFinite(ends) && (expires === undefined || ends < expires)) expires = ends
+    }
+  }
+
+  if (total <= 0) return null
+  return {
+    left,
+    total,
+    expiresAt: expires === undefined ? undefined : new Date(expires).toISOString(),
+    usableNow
+  }
+}

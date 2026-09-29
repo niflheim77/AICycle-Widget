@@ -2,7 +2,7 @@ import { session as eSession, BrowserWindow, safeStorage } from 'electron'
 import Store from 'electron-store'
 import { UsageSnapshot, UsageWindow, ExtraUsage } from './types'
 import { t } from '../../shared/i18n'
-import { frac } from './usage-math'
+import { frac, parseResetTickets, ResetTickets } from './usage-math'
 
 // Uses the same approach as claude-usage-widget: a real claude.ai browser
 // session (sessionKey cookie). The claude.ai web endpoints are what the web app
@@ -151,13 +151,32 @@ function mapExtra(overage: any, prepaid: any): ExtraUsage | undefined {
   }
 }
 
+/** e.g. "Limit resets: 1 of 1 left · expires 10/23" — same slot Codex uses for its
+ *  reset credits. Expiry is omitted once none are left. */
+function formatResetTickets(rt: ResetTickets): string {
+  const base = t('claude.resetTickets', rt.left, rt.total)
+  if (!rt.expiresAt || rt.left <= 0) return base
+  const d = new Date(rt.expiresAt)
+  // month/day only, in local time — the same short form the reset clocks use.
+  const when = `${d.getMonth() + 1}/${d.getDate()}`
+  return `${base} · ${t('claude.resetExpires', when)}`
+}
+
 /** Returns a snapshot from claude.ai, or null if not logged in / session invalid. */
 export async function collectClaudeWeb(includeExtra: boolean): Promise<UsageSnapshot | null> {
   await applyCookie() // best-effort; the persistent partition usually has the cookie
   try {
     const orgId = await getOrgId()
     if (!orgId) return null
-    const usage = await fetchJson(`https://claude.ai/api/organizations/${orgId}/usage`)
+    const usageUrl = `https://claude.ai/api/organizations/${orgId}/usage`
+    // `cedar_ember=1` is the flag claude.ai's own Settings → Usage page sends to get
+    // the limit-reset tickets added to the same response; without it that field is
+    // null. The name is an internal one Anthropic may rotate, and an unrecognised
+    // flag is rejected outright (400 with an error body), so if the flagged call does
+    // not come back with usage windows, fall back to the plain call. Reset tickets
+    // are the only thing lost; the usage numbers never depend on the flag.
+    let usage = await fetchJson(`${usageUrl}?cedar_ember=1`).catch(() => null)
+    if (!usage?.five_hour && !usage?.seven_day) usage = await fetchJson(usageUrl)
 
     const windows: UsageWindow[] = []
     const push = (w: UsageWindow | null) => { if (w) windows.push(w) }
@@ -175,11 +194,14 @@ export async function collectClaudeWeb(includeExtra: boolean): Promise<UsageSnap
       extra = mapExtra(overage, prepaid)
     }
 
+    const tickets = parseResetTickets(usage.cedar_ember)
+
     return {
       provider: 'claude',
       available: true,
       windows,
       extraUsage: extra,
+      extraInfo: tickets ? [formatResetTickets(tickets)] : undefined,
       plan: usage.plan?.name ?? usage.subscription,
       fetched_at: new Date().toISOString(),
       stale: false,

@@ -44,7 +44,7 @@ All data is read locally / from the official services you're already signed into
 
 | Provider | Source | Notes |
 |---|---|---|
-| **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, persisted as a cookie) | Shows 5H / 7D % + reset and extra usage (overage / prepaid). Not logged in → just a login button. |
+| **Claude** | `claude.ai` usage API via a one-time in-app login (sessionKey, persisted as a cookie) | Shows 5H / 7D % + reset and extra usage (overage / prepaid). The detail view also lists your unused limit-reset tickets (Settings → Usage → Resets on claude.ai) with their expiry. Not logged in → just a login button. |
 | **Codex** | `chatgpt.com/backend-api/codex/usage` using the token in `~/.codex/auth.json` | Fetched through a hidden Chromium window (passes Cloudflare). Shows 5H / weekly % + reset, plan, credits. Falls back to local token counts from `~/.codex/logs_2.sqlite`. |
 | **Grok** | `grok.com/rest/rate-limits` via a one-time in-app login | Fetched from inside the page so it carries the session. Shows the quota window (e.g. 2H) as used %, plus queries used / total. The endpoint reports the window length but no reset time, so the reset clock is estimated from when the window was first seen partly used. |
 | **Gemini** | The Antigravity IDE's local Language Server (loopback, no extra auth) | Live only while the IDE is open; shows prompt/flow credit usage + reset and full plan details. When closed, the last fetched value is cached and shown. |
@@ -82,6 +82,7 @@ src/
 - Reading the session straight out of Chrome's encrypted cookie store is intentionally not implemented.
 - The Gemini card reads the Antigravity IDE's language server, so it has no live data while that IDE is closed (the cached value is shown instead).
 - Grok's quota endpoint is an internal grok.com API, not a documented one — it can change without notice.
+- Claude's reset tickets come from `/usage?cedar_ember=1`. That flag is an internal name claude.ai's own page uses, and the server rejects flags it does not recognise, so if it is ever renamed the widget quietly falls back to the plain `/usage` call: the usage numbers are unaffected and only the reset-ticket line disappears.
 
 ## Credits
 

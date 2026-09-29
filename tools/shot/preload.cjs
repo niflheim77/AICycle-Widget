@@ -14,7 +14,8 @@ const snaps = {
       { window_type: 'five_hour', utilization: 0.46, label: '5H', resets_at: iso(2 * H + 13 * M) },
       { window_type: 'seven_day', utilization: 0.82, label: '7D', resets_at: iso(4 * D + 3 * H) }
     ],
-    extraUsage: { used: 20.08, limit: 20.0, balance: 68.8, currency: 'USD', enabled: true }
+    extraUsage: { used: 20.08, limit: 20.0, balance: 68.8, currency: 'USD', enabled: true },
+    extraInfo: ['Limit resets: 1 of 1 left · expires 10/23']
   },
   codex: {
     provider: 'codex', available: true, source: 'api', stale: false, plan: 'Plus', fetched_at: at,

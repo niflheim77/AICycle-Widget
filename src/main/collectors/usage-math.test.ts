@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { frac, isSpuriousZero } from './usage-math'
+import { frac, isSpuriousZero, parseResetTickets } from './usage-math'
 import { UsageSnapshot, UsageWindow } from './types'
 
 describe('frac', () => {
@@ -80,5 +80,73 @@ describe('isSpuriousZero', () => {
   it('ignores an empty reading', () => {
     const prev = cached([{ window_type: 'seven_day', utilization: 0.61, resets_at: future }])
     expect(isSpuriousZero([], prev, NOW)).toBe(false)
+  })
+})
+
+describe('parseResetTickets', () => {
+  const NOW = Date.parse('2026-09-29T00:00:00Z')
+
+  // The object claude.ai returned for /usage?cedar_ember=1 on a Pro account
+  // (ids and event_props trimmed).
+  const real = {
+    eligible: true,
+    grants: [{
+      id: 'opus55-launch-promax-20260921',
+      label: 'Claude Opus 5.5 launch: one usage-limit reset for Pro and Max',
+      resets_total: 1, resets_left: 1,
+      starts_at: '2026-09-22T16:00:00+00:00', ends_at: '2026-10-22T16:00:00+00:00',
+      clears: ['five_hour', 'seven_day', 'seven_day_overage_included'],
+      paused: false, usable_now: true, use_requires_limit: false
+    }],
+    next_grant_id: 'opus55-launch-promax-20260921', cooldown_until: null
+  }
+  const grant = (over: Record<string, unknown>) => ({ ...real.grants[0], ...over })
+
+  it('reads the real response shape', () => {
+    expect(parseResetTickets(real, NOW)).toEqual({
+      left: 1, total: 1, expiresAt: '2026-10-22T16:00:00.000Z', usableNow: true
+    })
+  })
+
+  it('sums across grants and reports the earliest expiry that still has a ticket', () => {
+    const got = parseResetTickets({ grants: [
+      grant({ resets_total: 2, resets_left: 2, ends_at: '2026-11-30T00:00:00Z' }),
+      grant({ resets_total: 1, resets_left: 1, ends_at: '2026-10-05T00:00:00Z' })
+    ] }, NOW)
+    expect(got).toMatchObject({ left: 3, total: 3, expiresAt: '2026-10-05T00:00:00.000Z' })
+  })
+
+  it('ignores a grant whose tickets are used up when picking the expiry', () => {
+    const got = parseResetTickets({ grants: [
+      grant({ resets_total: 1, resets_left: 0, ends_at: '2026-10-01T00:00:00Z' }),
+      grant({ resets_total: 1, resets_left: 1, ends_at: '2026-10-22T16:00:00Z' })
+    ] }, NOW)
+    expect(got).toMatchObject({ left: 1, total: 2, expiresAt: '2026-10-22T16:00:00.000Z' })
+  })
+
+  it('shows 0 of N (no expiry) once every ticket is spent', () => {
+    const got = parseResetTickets({ grants: [grant({ resets_left: 0 })] }, NOW)
+    expect(got).toEqual({ left: 0, total: 1, expiresAt: undefined, usableNow: false })
+  })
+
+  it('drops grants that have already expired', () => {
+    expect(parseResetTickets({ grants: [grant({ ends_at: '2026-09-01T00:00:00Z' })] }, NOW)).toBeNull()
+  })
+
+  it('is not usable now when paused or when the grant says it is not', () => {
+    expect(parseResetTickets({ grants: [grant({ paused: true })] }, NOW)?.usableNow).toBe(false)
+    expect(parseResetTickets({ grants: [grant({ usable_now: false })] }, NOW)?.usableNow).toBe(false)
+  })
+
+  it('returns null when there is nothing to show', () => {
+    expect(parseResetTickets(null, NOW)).toBeNull()
+    expect(parseResetTickets(undefined, NOW)).toBeNull()
+    expect(parseResetTickets({ eligible: false, grants: [] }, NOW)).toBeNull()
+    expect(parseResetTickets({ grants: 'nope' }, NOW)).toBeNull()
+  })
+
+  it('skips malformed grants instead of throwing', () => {
+    const got = parseResetTickets({ grants: [null, 'x', { resets_left: 'a' }, grant({})] }, NOW)
+    expect(got).toMatchObject({ left: 1, total: 1 })
   })
 })

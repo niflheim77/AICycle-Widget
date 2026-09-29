@@ -80,6 +80,8 @@ const messages: Record<Lang, Record<string, string>> = {
     'codex.creditBalance': '크레딧 잔액: {0}',
     'codex.creditNone': ' (없음)',
     'codex.resetCredits': '리셋 크레딧: {0}개',
+    'claude.resetTickets': '리셋권: {0}/{1}개 남음',
+    'claude.resetExpires': '{0} 만료',
     'codex.localTokens5h': '로컬 토큰 (5시간): {0}',
     'codex.localTokens7d': '로컬 토큰 (주간): {0}',
     // antigravity
@@ -168,6 +170,8 @@ const messages: Record<Lang, Record<string, string>> = {
     'codex.creditBalance': 'Credit balance: {0}',
     'codex.creditNone': ' (none)',
     'codex.resetCredits': 'Reset credits: {0}',
+    'claude.resetTickets': 'Limit resets: {0} of {1} left',
+    'claude.resetExpires': 'expires {0}',
     'codex.localTokens5h': 'Local tokens (5h): {0}',
     'codex.localTokens7d': 'Local tokens (weekly): {0}',
     'ag.turnOn': 'Open Antigravity IDE to update',
